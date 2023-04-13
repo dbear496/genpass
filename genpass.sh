@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
-saltfile="$HOME/.genpass_salt"
+confdir="$HOME/.genpass"
+seedfile="$confdir/seed"
+seedcheckfile="$confdir/seed_check"
+pwconfirmstr="00000000"
 checkfile="$HOME/.genpass_check"
 
-new="n"
+create="n"
+change="n"
 clip="n"
 print="y"
 output=""
@@ -13,7 +17,13 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     --create)
-      new="y"
+      create="y"
+      newseedfile=$2
+      shift # past argument
+      shift
+      ;;
+    --change)
+      change="y"
       shift # past argument
       ;;
     -c|--clipboard)
@@ -76,49 +86,60 @@ if [[ $help == "y" ]]; then
   exit
 fi
 
-if [ ! -e $saltfile ]; then
-  echo "warning: no salt file, creating blank salt file at '$saltfile'"
-  touch $saltfile
-fi
-salt=$(cat $saltfile | base64)
-
-if [[ $new == "y" ]]; then
-  echo "WARNING: This will change the generated passwords. To abort, press ctrl-C."
-  echo -n "new master password: "
-  read -s password
-  echo
-  echo -n "confirm new master password: "
-  read -s conf
-  echo
-  if [[ $password != $conf ]]; then
-    echo "error: passwords do not match"
+if [[ $create == "y" || $change == "y" ]]; then
+  if [[ $create == "y" && $change == "y" ]]; then
+    echo "genpass: incompatable options --create and --change" >&2
     exit 1
   fi
-  echo -n "${password}${salt}" | openssl sha256 -binary > $checkfile
-else
-  echo -n "tag: "
-  read tag
-  echo -n "password: "
-  read -s password
-  echo
-  while ! cmp -s $checkfile <(echo -n "${password}${salt}"  | openssl sha256 -binary); do
-    sleep 1
-    echo "incorrect password"
-    echo -n "password: "
-    read -s password
-    echo
+  if [[ $change == "y" ]]; then
+    while
+      echo -n "old password: "; read -s oldpassword; echo
+      ! cmp -s $seedcheckfile <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2 | openssl sha256 -binary)
+    do
+      sleep 1
+      echo "incorrect, try again"
+    done
+  fi
+  while
+    echo -n "new password: "; read -s newpassword; echo
+    echo -n "confirm new password: "; read -s conf; echo
+    [[ $password != $conf ]]
+  do
+    echo "passwords do not match, try again"
   done
   
-  pass=$(echo -n "${password}${salt}${tag}" | openssl sha256 -binary | base64)
+  openssl aes256 -e -in <(if [[ $create == "y" ]]; then cat $newseedfile | tee >(openssl sha256 -binary > ${seedcheckfile}); else openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2) -pass file:<(echo -n $newpassword) -pbkdf2 > ${seedfile}.new
   
-  if [[ $clip == "y" ]]; then
-    echo -n "$pass" | xclip -selection clipboard
-    sleep 0.1
-  fi
-  if [[ $print == "y" ]]; then
-    echo "$pass"
-  fi
-  if [[ $output != "" ]]; then
-    echo -n "$pass" > $output
-  fi
+  mv "${seedfile}"{.new,}
+  
+  echo "success"
+  exit
+fi
+  
+  
+while
+  echo -n "tag: "; read tag
+  [ -z $tag ]
+do
+  echo "tag may not be empty"
+done
+while
+  echo -n "password: "; read -s password; echo
+  ! cmp -s $seedcheckfile <(openssl aes256 -in $seedfile -pass file:<(echo -n $password) -pbkdf2 | openssl sha256 -binary)
+do
+  sleep 1
+  echo "incorrect, try again"
+done
+
+pass=$(cat <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2) <(echo -n $tag) | openssl sha256 -binary | openssl base64)
+
+if [[ $clip == "y" ]]; then
+  echo -n "$pass" | xclip -selection clipboard
+  sleep 0.1
+fi
+if [[ $print == "y" ]]; then
+  echo "$pass"
+fi
+if [[ $output != "" ]]; then
+  echo -n "$pass" > $output
 fi
