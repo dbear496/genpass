@@ -3,8 +3,7 @@
 confdir="$HOME/.genpass"
 seedfile="$confdir/seed"
 seedcheckfile="$confdir/seed_check"
-pwconfirmstr="00000000"
-checkfile="$HOME/.genpass_check"
+tagdir="$confdir/tags"
 
 create="n"
 change="n"
@@ -86,6 +85,9 @@ if [[ $help == "y" ]]; then
   exit
 fi
 
+if ! [ -d $confdir ]; then mkdir -p $confdir; fi
+if ! [ -d $tagdir ]; then mkdir -p $tagdir; fi
+
 if [[ $create == "y" || $change == "y" ]]; then
   if [[ $create == "y" && $change == "y" ]]; then
     echo "genpass: incompatable options --create and --change" >&2
@@ -99,6 +101,8 @@ if [[ $create == "y" || $change == "y" ]]; then
       sleep 1
       echo "incorrect, try again"
     done
+  elif [ -e $seedfile ]
+    echo "WARNING: Setting new seed. This will change existing passwords."
   fi
   while
     echo -n "new password: "; read -s newpassword; echo
@@ -115,14 +119,23 @@ if [[ $create == "y" || $change == "y" ]]; then
   echo "success"
   exit
 fi
-  
-  
+
+cd $tagdir
 while
-  echo -n "tag: "; read tag
-  [ -z $tag ]
-do
-  echo "tag may not be empty"
-done
+  echo -n "tag: "; read -e tag
+  if [ -z $tag ]; then
+    echo "tag may not be empty"
+  elif [[ $tag != $(basename $tag) ]]; then; # tab completion will not work
+  elif [ ! -e $tag ]; then
+    echo -n "confirm new tag '$tag' (y/n): "; read tagconf
+    if [[ $tagconf == "y" || $tagconf == "Y" ]]; then
+      touch $tag
+    else
+      tag=""
+    fi
+  fi
+  [ -z "$tag" ]
+do; done
 while
   echo -n "password: "; read -s password; echo
   ! cmp -s $seedcheckfile <(openssl aes256 -in $seedfile -pass file:<(echo -n $password) -pbkdf2 | openssl sha256 -binary)
@@ -131,7 +144,7 @@ do
   echo "incorrect, try again"
 done
 
-pass=$(cat <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2) <(echo -n $tag) | openssl sha256 -binary | openssl base64)
+pass=$(cat <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2) <(echo -n $tag) | openssl sha256 -binary | openssl base64 -e)
 
 if [[ $clip == "y" ]]; then
   echo -n "$pass" | xclip -selection clipboard
