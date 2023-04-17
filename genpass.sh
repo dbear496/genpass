@@ -3,7 +3,7 @@
 confdir="$HOME/.genpass"
 seedfile="$confdir/seed"
 seedcheckfile="$confdir/seed_check"
-tagdir="$confdir/tags"
+tagsfile="$confdir/tags"
 
 create="n"
 change="n"
@@ -86,7 +86,6 @@ if [[ $help == "y" ]]; then
 fi
 
 if ! [ -d $confdir ]; then mkdir -p $confdir; fi
-if ! [ -d $tagdir ]; then mkdir -p $tagdir; fi
 
 if [[ $create == "y" || $change == "y" ]]; then
   if [[ $create == "y" && $change == "y" ]]; then
@@ -120,17 +119,16 @@ if [[ $create == "y" || $change == "y" ]]; then
   exit
 fi
 
-cd $tagdir
 while
-  echo -n "tag: "; read -e tag
+  echo -n "tag: "; read tag
   if [ -z $tag ]; then
     echo "tag may not be empty"
-  elif [[ $tag != $(basename $tag) ]]; then; # tab completion will not work
-  elif [ ! -e $tag ]; then
-    echo -n "confirm new tag '$tag' (y/n): "; read tagconf
-    if [[ $tagconf == "y" || $tagconf == "Y" ]]; then
-      touch $tag
-    else
+  elif ! grep -xFq -e "$tag" $tagsfile; then
+    while
+      echo -n "confirm new tag '$tag' (y/n): "; read tagconf
+      [[ $tagconf == "y" || $tagconf == "Y" || $tagconf == "n" || $tagconf == "N" ]]
+    do; done
+    if [[ $tagconf == "n" || $tagconf == "N" ]]; then
       tag=""
     fi
   fi
