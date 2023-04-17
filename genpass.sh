@@ -4,6 +4,8 @@ confdir="$HOME/.genpass"
 seedfile="$confdir/seed"
 seedcheckfile="$confdir/seed_check"
 tagsfile="$confdir/tags"
+saltstr="salt"
+saltsize=100000000 # one hundred million
 
 create="n"
 change="n"
@@ -95,9 +97,12 @@ if [[ $create == "y" || $change == "y" ]]; then
   if [[ $change == "y" ]]; then
     while
       echo -n "old password: "; read -s oldpassword; echo
-      ! cmp -s $seedcheckfile <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2 | openssl sha256 -binary)
+      ! cmp -s $seedcheckfile <(
+        openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2 |
+        cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
+        openssl sha256 -binary
+      )
     do
-      sleep 1
       echo "incorrect, try again"
     done
   elif [ -e $seedfile ]
@@ -111,9 +116,17 @@ if [[ $create == "y" || $change == "y" ]]; then
     echo "passwords do not match, try again"
   done
   
-  openssl aes256 -e -in <(if [[ $create == "y" ]]; then cat $newseedfile | tee >(openssl sha256 -binary > ${seedcheckfile}); else openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2) -pass file:<(echo -n $newpassword) -pbkdf2 > ${seedfile}.new
+  if [[ $create == "y" ]]; then
+    cat $newseedfile | tee >(
+      cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
+      openssl sha256 -binary > ${seedcheckfile}
+    )
+  else
+    openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2
+  fi |
+    openssl aes256 -e -pass file:<(echo -n $newpassword) -pbkdf2 > ${seedfile}.new
   
-  mv "${seedfile}"{.new,}
+  mv -f "${seedfile}"{.new,}
   
   echo "success"
   exit
@@ -136,13 +149,22 @@ while
 do; done
 while
   echo -n "password: "; read -s password; echo
-  ! cmp -s $seedcheckfile <(openssl aes256 -in $seedfile -pass file:<(echo -n $password) -pbkdf2 | openssl sha256 -binary)
+  ! cmp -s $seedcheckfile <(
+    openssl aes256 -in $seedfile -pass file:<(echo -n $password) -pbkdf2 |
+    cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
+    openssl sha256 -binary
+  )
 do
-  sleep 1
   echo "incorrect, try again"
 done
 
-pass=$(cat <(openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2) <(echo -n $tag) | openssl sha256 -binary | openssl base64 -e)
+pass=$(
+  openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2 |
+  cat - <(echo -n $tag) |
+  cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
+  openssl sha256 -binary |
+  openssl base64 -e
+)
 
 if [[ $clip == "y" ]]; then
   echo -n "$pass" | xclip -selection clipboard
