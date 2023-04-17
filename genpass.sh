@@ -97,21 +97,20 @@ if [[ $create == "y" || $change == "y" ]]; then
   if [[ $change == "y" ]]; then
     while
       echo -n "old password: "; read -s oldpassword; echo
-      ! cmp -s $seedcheckfile <(
-        openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2 |
+      ! openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2 2>/dev/null |
         cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
-        openssl sha256 -binary
-      )
+        openssl sha256 -binary |
+        cmp -s - $seedcheckfile
     do
-      echo "incorrect, try again"
+      echo "incorrect password, try again"
     done
-  elif [ -e $seedfile ]
+  elif [ -e $seedfile ]; then
     echo "WARNING: Setting new seed. This will change existing passwords."
   fi
   while
     echo -n "new password: "; read -s newpassword; echo
     echo -n "confirm new password: "; read -s conf; echo
-    [[ $password != $conf ]]
+    [[ "$newpassword" != "$conf" ]]
   do
     echo "passwords do not match, try again"
   done
@@ -136,11 +135,11 @@ while
   echo -n "tag: "; read tag
   if [ -z "$tag" ]; then
     echo "tag may not be empty"
-  elif ! grep -xFq -e "$tag" $tagsfile; then
+  elif ! ( [ -f $tagsfile ] && grep -xFq -e "$tag" $tagsfile ); then
     while
       echo -n "confirm new tag '$tag' (y/n): "; read tagconf
-      [[ $tagconf == "y" || $tagconf == "Y" || $tagconf == "n" || $tagconf == "N" ]]
-    do; done
+      ! [[ "$tagconf" == "y" || "$tagconf" == "Y" || "$tagconf" == "n" || "$tagconf" == "N" ]]
+    do :; done
     if [[ $tagconf == "y" || $tagconf == "Y" ]]; then
       echo $tag >> $tagsfile
     else
@@ -148,16 +147,15 @@ while
     fi
   fi
   [ -z "$tag" ]
-do; done
+do :; done
 while
   echo -n "password: "; read -s password; echo
-  ! cmp -s $seedcheckfile <(
-    openssl aes256 -in $seedfile -pass file:<(echo -n $password) -pbkdf2 |
+  ! openssl aes256 -d -in $seedfile -pass file:<(echo -n $password) -pbkdf2 2>/dev/null |
     cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
-    openssl sha256 -binary
-  )
+    openssl sha256 -binary |
+    cmp -s - $seedcheckfile
 do
-  echo "incorrect, try again"
+  echo "incorrect password, try again"
 done
 
 pass=$(
