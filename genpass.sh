@@ -134,14 +134,16 @@ fi
 
 while
   echo -n "tag: "; read tag
-  if [ -z $tag ]; then
+  if [ -z "$tag" ]; then
     echo "tag may not be empty"
   elif ! grep -xFq -e "$tag" $tagsfile; then
     while
       echo -n "confirm new tag '$tag' (y/n): "; read tagconf
       [[ $tagconf == "y" || $tagconf == "Y" || $tagconf == "n" || $tagconf == "N" ]]
     do; done
-    if [[ $tagconf == "n" || $tagconf == "N" ]]; then
+    if [[ $tagconf == "y" || $tagconf == "Y" ]]; then
+      echo $tag >> $tagsfile
+    else
       tag=""
     fi
   fi
