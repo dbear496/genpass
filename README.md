@@ -7,6 +7,8 @@ Unlike other password managers, this one does not store your passwords in any fo
 ## How to use it
 After choosing a seed and doing the setup, you can generate a password by running `genpass` on the terminal. It will ask you for a tag for the password and for your master password. It will then print the generated password to standard out. To instead put the generated password in your clipboard, use the `-c` option. To print a list of all available options, use the `-h` option.
 
+Make sure to use a different tag for each password or online account. If you use the same tag, then GenPass will generate the same password, and using the same password across two or more online accounts is not secure.
+
 ## How to set it up
 
 To install GenPass, simply copy `genpass.sh` to `/usr/local/bin/genpass`.
