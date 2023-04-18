@@ -39,6 +39,8 @@ If you want to change your master password, use
 genpass --change
 ```
 
+Before, trusting all your online accounts to GenPass, I recommend giving a quick look at the source code to verify that I'm not doing anything fishy. Even if you don't code, you should be able to see if something fishy is going on.
+
 ## How it works
 
 GenPass uses a **seed**, a **salt**, and a **tag** to generate your passwords. Additionally, a **master password** is used to encrypt your seed.
