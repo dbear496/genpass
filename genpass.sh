@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 confdir="$HOME/.genpass"
 seedfile="$confdir/seed"
