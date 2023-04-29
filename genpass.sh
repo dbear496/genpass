@@ -127,7 +127,7 @@ if [[ $create == "y" || $change == "y" ]]; then
     # create a new seed check file from the imported seed
     cat $newseedfile | tee >(
       cat - <(yes $saltstr | tr -d '\n' | head -c$saltsize) |
-      openssl sha256 -binary > ${seedcheckfile}
+      openssl sha256 -binary > ${seedcheckfile}.new
     )
   else
     # decrypt the seed with the old password
@@ -138,6 +138,7 @@ if [[ $create == "y" || $change == "y" ]]; then
   
   # move the new seed to the correct location (overwriting any old seed)
   mv -f "${seedfile}"{.new,}
+  mv -f "${seedcheckfile}"{.new,}
   
   echo "success"
   exit
