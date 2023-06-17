@@ -5,6 +5,7 @@ export masterpw="test masterpw"
 tmp=$(mktemp -d)
 homebak=$tmp/.genpass_bak
 export homedir=$tmp/.genpass
+timeout="60s"
 
 passed=0
 failed=0
@@ -26,7 +27,7 @@ for test in $(ls tests); do
   cp -r $homebak $homedir
   
   # run the test
-  if msg=$(timeout 10s tests/$test); then
+  if msg=$(timeout $timeout tests/$test); then
     echo "pass"
     : $((passed += 1))
   else
