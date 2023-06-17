@@ -1,10 +1,13 @@
 #!/usr/bin/bash
 
 # GenPass parameters
-confdir="$HOME/.genpass"
-seedfile="$confdir/seed"
-seedcheckfile="$confdir/seed_check"
-tagsfile="$confdir/tags"
+update_confdir() {
+  confdir=$1
+  seedfile="$confdir/seed"
+  seedcheckfile="$confdir/seed_check"
+  tagsfile="$confdir/tags"
+}
+update_confdir "$HOME/.genpass"
 saltstr="salt" # changing saltstr or saltsize will change the generated passwords
 saltsize=100000000 # one hundred million
 
@@ -55,6 +58,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     -o|--output)
       output=$2
+      shift # past argument
+      shift
+      ;;
+    --home)
+      update_confdir $2
       shift # past argument
       shift
       ;;
