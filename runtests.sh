@@ -26,11 +26,15 @@ for test in $(ls tests); do
   cp -r $homebak $homedir
   
   # run the test
-  if msg=$(tests/$test); then
+  if msg=$(timeout 10s tests/$test); then
     echo "pass"
     : $((passed += 1))
   else
-    echo "fail"
+    if [[ $? -eq 124 ]]; then
+      echo "fail (timeout)"
+    else
+      echo "fail"
+    fi
     : $((failed += 1))
   fi
   if [[ -n "$msg" ]]; then
