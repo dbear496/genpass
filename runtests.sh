@@ -5,7 +5,7 @@ export masterpw="test masterpw"
 tmp=$(mktemp -d)
 homebak=$tmp/.genpass_bak
 export homedir=$tmp/.genpass
-timeout="60s"
+timeout="10s"
 
 passed=0
 failed=0
