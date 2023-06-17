@@ -144,6 +144,13 @@ if [[ $create == "y" || $change == "y" ]]; then
   exit
 fi
 
+# make sure the seed and the seed check files exists
+if ! [ -e $seedfile -a -e $seedcheckfile ]; then
+  echo "genpass: missing seed file or seed check file" >&2
+  echo "         please import a seed with the --create option" >&2
+  exit 1
+fi
+
 # get tag from user
 while
   echo -n "tag: "; read tag
