@@ -139,6 +139,7 @@ if [[ $create == "y" || $change == "y" ]]; then
     )
   else
     # decrypt the seed with the old password
+    cp "${seedcheckfile}"{,.tmp}
     openssl aes256 -d -in $seedfile -pass file:<(echo -n $oldpassword) -pbkdf2
   fi |
     # encrypt the seed with the new password
