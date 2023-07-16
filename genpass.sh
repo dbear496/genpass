@@ -18,6 +18,7 @@ clip="n"
 print="y"
 output=""
 help="n"
+listtags="n"
 
 # command line parsing. I got this from stack overflow
 POSITIONAL_ARGS=()
@@ -61,6 +62,10 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift
       ;;
+    -l|--list-tags)
+      listtags="y"
+      shift
+      ;;
     --home)
       update_confdir $2
       shift # past argument
@@ -94,8 +99,16 @@ if [[ $help == "y" ]]; then
   echo "  -b, --both      - print the password to stdout and copy it to the clipboard"
   echo "  -o <file>"
   echo "  --output <file> - write the password to <file>"
+  echo "  -l, --list-tags - print all known tags to standard out"
   echo "  --create        - create/change the master password. WARNING: This will change the generated passwords!"
   echo "  -h, --help      - print this help message"
+  exit
+fi
+
+if [[ "$listtags" == "y" ]]; then
+  if [[ -f "$tagsfile" ]]; then
+    cat $tagsfile
+  fi
   exit
 fi
 
