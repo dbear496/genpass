@@ -200,11 +200,13 @@ pass=$(
   openssl base64 -e
 )
 
-if [[ $clip == "y" ]]; then
+if [[ $clip == "y" ]]; then {
   # copy generated password to the clipboard
   echo -n "$pass" | xclip -selection clipboard
+  sleep 30
+  echo -n "" | xclip -selection clipboard
   sleep 0.1
-fi
+} & fi
 if [[ $print == "y" ]]; then
   # print the generated password to standard output
   echo "$pass"
