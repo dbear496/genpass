@@ -213,13 +213,20 @@ pass=$(
   openssl base64 -e
 )
 
-if [[ $clip == "y" ]]; then {
+if [[ $clip == "y" ]]; then
   # copy generated password to the clipboard
-  echo -n "$pass" | xclip -selection clipboard
-  sleep 30
-  echo -n "" | xclip -selection clipboard
-  sleep 0.1
-} & fi
+  if which xclip > /dev/null; then { # X
+    echo -n "$pass" | xclip -selection clipboard
+    sleep 30
+    echo -n "" | xclip -selection clipboard
+    sleep 0.1
+  } & fi
+  if which wl-copy > /dev/null; then { # Wayland
+    echo -n "$pass" | wl-copy
+    sleep 30
+    echo -n "" | wl-copy
+  } & fi
+fi
 if [[ $print == "y" ]]; then
   # print the generated password to standard output
   echo "$pass"
