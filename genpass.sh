@@ -225,7 +225,7 @@ if [[ $clip == "y" ]]; then
     echo -n "$pass" | wl-copy
     sleep 30
     echo -n "" | wl-copy
-  } & fi
+  } & sleep 0.1; fi
 fi
 if [[ $print == "y" ]]; then
   # print the generated password to standard output
