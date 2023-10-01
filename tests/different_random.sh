@@ -7,7 +7,7 @@ genpws=()
 for i in $(seq $count); do
   tag="tag_$RANDOM"
   
-  genpw=$(./genpass.sh --home $homedir --output /dev/fd/3 3>&1 < <(echo -e "${tag}\ny\n${masterpw}") >/dev/null)
+  genpw=$($genpass --home $homedir --output /dev/fd/3 3>&1 < <(echo -e "${tag}\ny\n${masterpw}") >/dev/null)
   
   for j in $(seq $((count - 1))); do
     if [[ $genpw == ${genpws[$j]} && $tag != ${tags[$j]} ]]; then

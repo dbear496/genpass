@@ -9,7 +9,7 @@ exppw=$(cat \
   openssl sha256 --binary | base64
 )
 
-genpw=$(./genpass.sh --home $homedir --output /dev/fd/3 3>&1 < <(echo -e "$tag\ny\n${masterpw}") >/dev/null)
+genpw=$($genpass --home $homedir --output /dev/fd/3 3>&1 < <(echo -e "$tag\ny\n${masterpw}") >/dev/null)
 
 if [[ $genpw != $exppw ]]; then
   echo "expected '$exppw' but got '$genpw'"

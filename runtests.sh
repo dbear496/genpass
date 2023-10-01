@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export genpass=./genpass.sh
 export seed="test seed"
 export masterpw="test masterpw"
 tmp=$(mktemp -d)
@@ -11,7 +12,7 @@ passed=0
 failed=0
 skipped=0
 
-./genpass.sh --home $homebak --create <(echo -n $seed) < <(echo -e "${masterpw}\n${masterpw}") >/dev/null
+$genpass --home $homebak --create <(echo -n $seed) < <(echo -e "${masterpw}\n${masterpw}") >/dev/null
 
 for test in $(ls tests); do
   echo -n "running test $test..."
