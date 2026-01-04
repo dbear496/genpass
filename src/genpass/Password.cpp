@@ -1,8 +1,21 @@
 
 namespace genpass {
 
+Password::Password(const std::string& id)
+  : id(id), serial(0)
+{ }
+
+nlohmann::json
+Password::serialize() const {
+  return nlohmann::json{
+    {"id", id},
+    {"algorithm", algName()},
+    {"serial", serial}
+  };
+}
+
 PasswordV2::PasswordV2(const std::string& id)
-  : id(id), serial(0), length(48), postfix("aA1!"), fill('0')
+  : Password(id), length(48), postfix("aA1!"), fill('0')
 { }
 
 std::string
@@ -69,6 +82,17 @@ PasswordV2::prepare(const std::string& base) const {
   pw += postfix;
 
   return pw;
+}
+
+nlohmann::json
+PasswordV2::serialize() const {
+  nlohmann::json json = Password::serialize();
+  json.update(nlohmann::json{
+    {"length", length},
+    {"postfix", postfix},
+    {"bannedChars", bannedChars},
+    {"fill", fill}
+  });
 }
 
 } // namespace genpass
