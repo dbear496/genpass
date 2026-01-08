@@ -2,7 +2,7 @@
  * src/Genpass.cpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2026       David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
