@@ -15,6 +15,7 @@ public:
 
   std::string id;
   int serial;
+  std::string note;
 };
 
 class PasswordV2 : Password {

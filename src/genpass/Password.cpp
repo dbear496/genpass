@@ -10,7 +10,8 @@ Password::serialize() const {
   return nlohmann::json{
     {"id", id},
     {"algorithm", algName()},
-    {"serial", serial}
+    {"serial", serial},
+    {"note", note}
   };
 }
 
