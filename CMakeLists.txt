@@ -21,40 +21,42 @@
 cmake_minimum_required(VERSION 4.0)
 
 project(genpass
-  VERSION 0.0.0
+  VERSION 2.0.0
   LANGUAGES CXX
   DESCRIPTION "A unique password manager that doesn't store passwords."
   HOMEPAGE_URL "https://github.com/dbear496/genpass"
 )
+set(PROJECT_NAME_PRETTY "GenPass")
 
 
 ### dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/mk/cmake)
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(nlohmann_json 3.12.0 REQUIRED)
 
 
 ### build configurations
-set(BUILD_TYPES Release MinSizeRel RelWithDebInfo BetaTest Debug DebugOpt)
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${BUILD_TYPES})
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
-	message(STATUS "No build type specified, defaulting to ${CMAKE_BUILD_TYPE}.")
+set(BUILD_TYPES CMake Release MinSizeRel RelWithDebInfo BetaTest Debug DebugOpt)
+set_property(CACHE GENPASS_BUILD_TYPE PROPERTY STRINGS ${BUILD_TYPES})
+set(GENPASS_BUILD_TYPE "CMAKE" CACHE STRING)
+string(TOUPPER "${GENPASS_BUILD_TYPE}" BUILD_TYPE_UPPER)
+if(BUILD_TYPE_UPPER STREQUAL "CMAKE")
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
 endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
-set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -w -DNDEBUG")
-set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -w -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
-set(CMAKE_CXX_FLAGS_BETATEST       "-O3 -g -w")
-set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUGOPT       "-O2 -g -DDEBUG")
+set(GENPASS_CXX_FLAGS_RELEASE        "-O3 -w -DNDEBUG")
+set(GENPASS_CXX_FLAGS_MINSIZEREL     "-Os -w -DNDEBUG")
+set(GENPASS_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
+set(GENPASS_CXX_FLAGS_BETATEST       "-O3 -g -w")
+set(GENPASS_CXX_FLAGS_DEBUG          "-O0 -g -DDEBUG")
+set(GENPASS_CXX_FLAGS_DEBUGOPT       "-O2 -g -DDEBUG")
 foreach(BType ${BUILD_TYPES})
 	string(TOUPPER ${BType} BTYPE)
-	set(CMAKE_CXX_FLAGS_${BTYPE} ${CMAKE_CXX_FLAGS_${BTYPE}}
+	set(GENPASS_CXX_FLAGS_${BTYPE} ${GENPASS_CXX_FLAGS_${BTYPE}}
 		CACHE STRING "Flags used by the CXX compiler for ${BTYPE} builds.")
-	set(CMAKE_C_FLAGS_${BCONFIG} ${CMAKE_CXX_FLAGS_${BTYPE}}
+	set(GENPASS_C_FLAGS_${BCONFIG} ${GENPASS_CXX_FLAGS_${BTYPE}}
 		CACHE STRING "Flags used by the C compiler for ${BTYPE} builds.")
 endforeach()
+add_compile_options(${GENPASS_CXX_FLAGS_${BUILD_TYPE_UPPER}})
 
 
 ### compute version
@@ -83,14 +85,14 @@ if(VERSION_${BUILD_TYPE_UPPER})
 elseif(NOT DEFINED VERSION_${BUILD_TYPE_UPPER})
 	message(WARNING "unrecognized build type: ${BUILD_TYPE_UPPER}")
 endif()
-message(STATUS "GenPass version: ${FULL_PROJECT_VERSION}")
+message(STATUS "${PROJECT_NAME_PRETTY} version: ${FULL_PROJECT_VERSION}")
 
 
 ### compilation options
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard")
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
+if(DEFINED GENPASS_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS ${GENPASS_SHARED_LIBS})
+endif()
 
 
 ### install dirs
@@ -100,7 +102,7 @@ include(GNUInstallDirs)
 ### include what you use
 find_program(INCLUDE_WHAT_YOU_USE NAMES include-what-you-use)
 if(NOT CMAKE_CROSSCOMPILING AND INCLUDE_WHAT_YOU_USE AND
-	NOT CMAKE_CXX_FLAGS_${BUILD_TYPE_UPPER} MATCHES "(^| )-w( |$)"
+	NOT GENPASS_CXX_FLAGS_${BUILD_TYPE_UPPER} MATCHES "(^| )-w( |$)"
 )
 	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE}
 		-w -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/mk/iwyu.map)
@@ -127,7 +129,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   ${CMAKE_SOURCE_DIR}/build.*/
 )
 set(CPACK_PACKAGE_VERSION ${FULL_PROJECT_VERSION})
-if(CMAKE_CXX_FLAGS_${BUILD_TYPE_UPPER} MATCHES "(^| )-g( |$)")
+if(GENPASS_CXX_FLAGS_${BUILD_TYPE_UPPER} MATCHES "(^| )-g( |$)")
 	set(CPACK_STRIP_FILES FALSE)
 else()
 	set(CPACK_STRIP_FILES TRUE)
