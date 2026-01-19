@@ -19,5 +19,18 @@
 # ---------------------------------------------------------------------- */
 
 add_library(misc-utils OBJECT
+  fmt_nlohmann.hpp
+  ossl_ptr.hpp
   serialize.hpp
+)
+
+target_include_directories(misc-utils
+  PUBLIC
+  ..
+)
+
+target_link_libraries(misc-utils
+  PUBLIC
+  fmt::fmt
+  nlohmann_json::nlohmann_json
 )

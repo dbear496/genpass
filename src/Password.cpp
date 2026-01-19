@@ -18,6 +18,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
+#include "Password.hpp"
+
+#include <stdexcept>
+#include <openssl/evp.h>
+
+#include "util/serialize.hpp"
+#include "util/ossl_ptr.hpp"
+#include "Seed.hpp"
 
 namespace genpass {
 
@@ -29,7 +37,7 @@ nlohmann::json
 Password::serialize() const {
   return nlohmann::json{
     {"id", id},
-    {"algorithm", algName()},
+    {"algorithm", algorithmName()},
     {"serial", serial},
     {"note", note}
   };
@@ -42,40 +50,40 @@ PasswordV2::PasswordV2(const std::string& id)
 std::string
 PasswordV2::generate(const Seed& seed) const {
 
-  const std::size_t genDataSize = 4 + id.length();
+  const std::size_t genDataSize = sizeof(std::int32_t) + id.length();
   unsigned char genData[genDataSize];
   unsigned char *p = genData;
 
-  p += serialize(p, (std::int32_t)serial);
+  p += genpass::serialize(p, (std::int32_t)serial);
   static_assert(sizeof(*id.data()) == 1);
   std::memcpy(p, id.data(), id.length());
 
-  std::unique_ptr<EVP_MAC> macAlg(
+  ossl_unique_ptr<EVP_MAC> macAlg(
     EVP_MAC_fetch(NULL, "HMAC", "digest='SHA256'"),
     &EVP_MAC_free
   );
   if(!macAlg)
-    throw std::runtime_exception("failed to fetch MAC algorithm");
+    throw std::runtime_error("failed to fetch MAC algorithm");
 
-  std::unique_ptr<EVP_MAC_CTX> mac(EVP_MAC_CTX_new(macAlg.get()),
+  ossl_unique_ptr<EVP_MAC_CTX> mac(EVP_MAC_CTX_new(macAlg.get()),
     &EVP_MAC_CTX_free);
   if(!mac)
-    throw std::runtime_exception("failed to create MAC context");
+    throw std::runtime_error("failed to create MAC context");
 
-  if(!EVP_MAC_init_SKEY(mac.get(), seed.key, NULL))
-    throw std::runtime_exception("failure in MAC initialization");
+  if(!EVP_MAC_init_SKEY(mac.get(), seed.getKey(), NULL))
+    throw std::runtime_error("failure in MAC initialization");
 
-  if(!EVP_MAC_update(mac.get(), genData))
-    throw std::runtime_exception("failure in MAC update");
+  if(!EVP_MAC_update(mac.get(), genData, genDataSize))
+    throw std::runtime_error("failure in MAC update");
 
   std::size_t macSize = EVP_MAC_CTX_get_mac_size(mac.get());
   if(!macSize)
-    throw std::runtime_exception("failed to query MAC size");
+    throw std::runtime_error("failed to query MAC size");
 
   unsigned char macOut[macSize];
   std::size_t macOutLen;
   if(!EVP_MAC_final(mac.get(), macOut, &macOutLen, macSize))
-    throw std::runtime_exception("failed to finalize MAC");
+    throw std::runtime_error("failed to finalize MAC");
 
   unsigned char encoded[(macOutLen / 3 + 1) * 4];
   EVP_EncodeBlock(encoded, macOut, macOutLen);
@@ -114,6 +122,7 @@ PasswordV2::serialize() const {
     {"bannedChars", bannedChars},
     {"fill", fill}
   });
+  return json;
 }
 
 } // namespace genpass

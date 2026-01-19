@@ -20,19 +20,35 @@
 
 add_subdirectory(util)
 
-add_library(genpass
+set(LIBNAME ${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}) # genpass-2
+
+add_library(${LIBNAME}
   Genpass.cpp
-  Genpass.hpp
   Password.cpp
-  Password.hpp
   Seed.cpp
+)
+target_sources(${LIBNAME} PUBLIC FILE_SET HEADERS FILES
+  Genpass.hpp
+  Password.hpp
   Seed.hpp
 )
 
-target_compile_features(genpass PUBLIC cxx_std_20)
 
-target_link_libraries(genpass
+target_link_libraries(${LIBNAME}
+  PUBLIC
+  OpenSSL::Crypto
   PRIVATE
   misc-utils
-  nlohmann::json
+  nlohmann_json::nlohmann_json
+  fmt::fmt
+)
+target_include_directories(${LIBNAME} PUBLIC .)
+target_compile_features(${LIBNAME} PUBLIC cxx_std_20)
+set_target_properties(${LIBNAME} PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${ABI_VERSION}
+)
+
+install(TARGETS ${LIBNAME}
+  FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_APPINCLUDEDIR}
 )

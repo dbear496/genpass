@@ -18,6 +18,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
+#ifndef __GENPASS_PASSWORD_HPP__
+#define __GENPASS_PASSWORD_HPP__
+
+#include <string>
+#include <cstdint>
+#include <nlohmann/json.hpp>
+#include <unordered_set>
+
+#include "Seed.hpp"
 
 namespace genpass {
 
@@ -32,13 +41,12 @@ public:
   virtual nlohmann::json serialize() const;
 
   std::string id;
-  int serial;
+  std::int32_t serial;
   std::string note;
 };
 
-class PasswordV2 : Password {
+class PasswordV2 : public Password {
 public:
-
   PasswordV2(const std::string& id);
   virtual ~PasswordV2();
 
@@ -54,6 +62,9 @@ public:
   char fill;
 
 private:
-  static const std::string algName = "genpass-2.0";
+  static constexpr std::string algName = "genpass-2.0";
 };
+
 } // namespace genpass
+
+#endif // __GENPASS_PASSWORD_HPP__

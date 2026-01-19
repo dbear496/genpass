@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------- *\
- * src/Seed.hpp
+ * src/util/fmt_nlohmann.hpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2025      David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,39 +18,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#ifndef __GENPASS_SEED_HPP__
-#define __GENPASS_SEED_HPP__
+#ifndef __GENPASS_UTIL_FMT_NLOHMANN_HPP__
+#define __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 
-#include <filesystem>
-#include <memory>
-#include <string>
+#include <fmt/ostream.h>
+#include <nlohmann/json.hpp>
 
-class evp_skey_st;
-using EVP_SKEY = evp_skey_st;
+template <> struct fmt::formatter<nlohmann::json> : ostream_formatter {};
 
-namespace genpass {
-
-class Seed {
-  using EVP_SKEY_ptr = std::unique_ptr<EVP_SKEY, void (*)(EVP_SKEY *)>;
-
-public:
-  Seed(EVP_SKEY_ptr&& key)
-    : key(std::move(key))
-  { }
-  ~Seed() { }
-
-  EVP_SKEY *getKey() const { return key.get(); }
-
-  static Seed fromEncryptedFile(
-    const std::filesystem::path& file,
-    const std::string& password
-  );
-
-private:
-
-  const EVP_SKEY_ptr key;
-};
-
-} // namespace genpass
-
-#endif // __GENPASS_SEED_HPP__
+#endif // __GENPASS_UTIL_FMT_NLOHMANN_HPP__

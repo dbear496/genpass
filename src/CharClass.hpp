@@ -18,8 +18,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
+#ifndef __GENPASS_CHARCLASS_HPP__
+#define __GENPASS_CHARCLASS_HPP__
 
 namespace genpass {
+
 class CharClass {
 public:
   CharClass();
@@ -38,4 +41,7 @@ public:
   static const CharClass digit;
   static const CharClass special;
 };
+
 } // namespace genpass
+
+#endif // __GENPASS_CHARCLASS_HPP__

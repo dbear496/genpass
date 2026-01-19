@@ -18,11 +18,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
+#ifndef __GENPASS_GENPASS_HPP__
+#define __GENPASS_GENPASS_HPP__
+
+#include <functional>
+#include <unordered_map>
+#include <string>
+#include <memory>
+
+#include "Seed.hpp"
+#include "Password.hpp"
 
 namespace genpass {
 
 class Genpass {
-  using Loader = std::function<Password, const nlohmann::json&>;
+  using Loader =
+    std::function<std::unique_ptr<Password>(const nlohmann::json&)>;
 
 public:
   Password& getPassword(const std::string& id) const;
@@ -43,3 +54,5 @@ private:
 };
 
 } // namespace genpass
+
+#endif // __GENPASS_GENPASS_HPP__

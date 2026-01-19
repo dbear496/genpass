@@ -18,6 +18,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
+#include "Genpass.hpp"
+
+#include <fmt/format.h>
+
+#include "util/fmt_nlohmann.hpp"
+#include "Password.hpp"
 
 namespace genpass {
 
@@ -32,22 +38,22 @@ Genpass::readConfig<nlohmann::json>(nlohmann::json&& in) {
     auto loaderLookup = loaders.find(algName);
     if(loaderLookup == loaders.end()) {
       unknownAlg = true;
-      std::println(stderr, "error: unknown algorithm for %s: %s",
+      fmt::println(stderr, "error: unknown algorithm for %s: %s",
         pw.at("id"), algName);
       continue;
     }
-    Loader& loader = *loaderLookup;
+    Loader& loader = loaderLookup->second;
 
-    Password password = loader(pw);
+    std::unique_ptr<Password> password(loader(pw));
 
-    if(!passwords.insert({password.id, password}).second) {
-      std::println(stderr, "warning: password with this id already exists: %s",
-        password.id);
+    if(!passwords.insert({password->id, std::move(password)}).second) {
+      fmt::println(stderr, "warning: password with this id already exists: %s",
+        pw.at("id"));
     }
   }
 
   if(unknownAlg) {
-    std::println(stderr,
+    fmt::println(stderr,
       "error: Some passwords could not be loaded because there is no loader."
       " This could happen if a plugin is missing.");
   }
