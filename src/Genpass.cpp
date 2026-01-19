@@ -20,10 +20,13 @@
 
 #include "Genpass.hpp"
 
-#include <fmt/format.h>
+#include <fmt/base.h>    // for println
+#include <fmt/format.h>  // for native_formatter::format
+#include <stdio.h>       // for stderr
+#include <utility>       // for move, pair
 
 #include "util/fmt_nlohmann.hpp"
-#include "Password.hpp"
+#include "Password.hpp"  // for Password
 
 namespace genpass {
 

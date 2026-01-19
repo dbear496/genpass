@@ -36,11 +36,11 @@ target_sources(${LIBNAME} PUBLIC FILE_SET HEADERS FILES
 
 target_link_libraries(${LIBNAME}
   PUBLIC
+  nlohmann_json::nlohmann_json
   OpenSSL::Crypto
   PRIVATE
-  misc-utils
-  nlohmann_json::nlohmann_json
   fmt::fmt
+  misc-utils
 )
 target_include_directories(${LIBNAME} PUBLIC .)
 target_compile_features(${LIBNAME} PUBLIC cxx_std_20)

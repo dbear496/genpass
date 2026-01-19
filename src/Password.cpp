@@ -20,12 +20,17 @@
 
 #include "Password.hpp"
 
-#include <stdexcept>
-#include <openssl/evp.h>
+#include <nlohmann/detail/json_ref.hpp>  // for json_ref
+#include <nlohmann/json.hpp>             // for basic_json
+#include <openssl/evp.h>                 // for EVP_EncodeBlock, EVP_MAC_CTX...
+#include <openssl/types.h>               // for EVP_MAC, EVP_MAC_CTX
+#include <cstring>                       // for memcpy
+#include <map>                           // for operator==
+#include <stdexcept>                     // for runtime_error, invalid_argument
 
-#include "util/serialize.hpp"
-#include "util/ossl_ptr.hpp"
-#include "Seed.hpp"
+#include "Seed.hpp"                      // for Seed
+#include "util/ossl_ptr.hpp"             // for ossl_unique_ptr
+#include "util/serialize.hpp"            // for serialize
 
 namespace genpass {
 

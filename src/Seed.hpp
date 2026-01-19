@@ -21,11 +21,13 @@
 #ifndef __GENPASS_SEED_HPP__
 #define __GENPASS_SEED_HPP__
 
-#include <filesystem>
-#include <memory>
-#include <string>
+#include <filesystem>  // for path
+#include <memory>      // for unique_ptr
+#include <string>      // for string
+#include <utility>     // for move
 
 class evp_skey_st;
+
 using EVP_SKEY = evp_skey_st;
 
 namespace genpass {

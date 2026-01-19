@@ -21,12 +21,13 @@
 #ifndef __GENPASS_PASSWORD_HPP__
 #define __GENPASS_PASSWORD_HPP__
 
-#include <string>
-#include <cstdint>
-#include <nlohmann/json.hpp>
-#include <unordered_set>
+#include <nlohmann/json_fwd.hpp>  // for json
+#include <cstddef>                // for size_t
+#include <cstdint>                // for int32_t
+#include <string>                 // for string, basic_string
+#include <unordered_set>          // for unordered_set
 
-#include "Seed.hpp"
+#include "Seed.hpp"               // for Seed
 
 namespace genpass {
 

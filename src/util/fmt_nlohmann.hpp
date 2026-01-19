@@ -21,6 +21,8 @@
 #ifndef __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 #define __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 
+// IWYU pragma: always_keep
+
 #include <fmt/ostream.h>
 #include <nlohmann/json.hpp>
 

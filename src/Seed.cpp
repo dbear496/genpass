@@ -20,17 +20,17 @@
 
 #include "Seed.hpp"
 
-#include <cstddef>
-#include <openssl/kdf.h>
-#include <stdexcept>
-#include <fstream>
-#include <cstring>
-#include <cassert>
-#include <functional>
-#include <openssl/core_names.h>
-#include <openssl/evp.h>
+#include <openssl/core.h>        // for OSSL_PARAM_OCTET_STRING, OSSL_PARAM_...
+#include <openssl/core_names.h>  // for OSSL_KDF_PARAM_ITER, OSSL_KDF_PARAM_...
+#include <openssl/evp.h>         // for EVP_CIPHER_CTX_new, EVP_CIPHER_CTX_s...
+#include <openssl/kdf.h>         // for EVP_KDF_CTX_new, EVP_KDF_derive, EVP...
+#include <openssl/types.h>       // for EVP_CIPHER, EVP_CIPHER_CTX, EVP_KDF
+#include <cassert>               // for assert
+#include <cstring>               // for NULL, memcmp, size_t
+#include <fstream>               // for basic_ifstream, basic_istream::read
+#include <stdexcept>             // for runtime_error
 
-#include "util/ossl_ptr.hpp"
+#include "util/ossl_ptr.hpp"     // for ossl_unique_ptr
 
 namespace genpass {
 
