@@ -32,7 +32,7 @@ namespace genpass {
 
 template<>
 void
-Genpass::readConfig<nlohmann::json>(nlohmann::json&& in) {
+Genpass::deserialize<nlohmann::json>(nlohmann::json&& in) {
   bool unknownAlg = false;
 
   for(const auto& pw : in.at("passwords")) {
@@ -60,6 +60,16 @@ Genpass::readConfig<nlohmann::json>(nlohmann::json&& in) {
       "error: Some passwords could not be loaded because there is no loader."
       " This could happen if a plugin is missing.");
   }
+}
+
+nlohmann::json
+Genpass::serialize() const {
+  nlohmann::json ret{};
+  nlohmann::json& passwordsJson = ret["passwords"] = nlohmann::json::array({});
+  for(const auto& pwEntry : passwords) {
+    passwordsJson += pwEntry.second->serialize();
+  }
+  return ret;
 }
 
 } // namespace genpass

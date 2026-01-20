@@ -41,7 +41,7 @@ public:
   virtual const std::string& algorithmName() const = 0;
   virtual nlohmann::json serialize() const;
 
-  std::string id;
+  const std::string id;
   std::int32_t serial;
   std::string note;
 };

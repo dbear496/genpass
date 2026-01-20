@@ -45,10 +45,10 @@ public:
   void registerLoader(const std::string& name, Loader loader);
 
   template<typename I>
-  void readConfig(I&& in) {
-    readConfig(nlohmann::json::parse(in));
+  void deserialize(I&& in) {
+    deserialize(nlohmann::json::parse(in));
   }
-  std::string writeConfig() const;
+  nlohmann::json serialize() const;
 
 private:
   std::unordered_map<std::string, Loader> loaders;
