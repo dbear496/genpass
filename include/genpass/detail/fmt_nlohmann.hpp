@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------- *\
- * src/CharClass.hpp
+ * src/detail/fmt_nlohmann.hpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#ifndef __GENPASS_CHARCLASS_HPP__
-#define __GENPASS_CHARCLASS_HPP__
+#ifndef __GENPASS_UTIL_FMT_NLOHMANN_HPP__
+#define __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 
-namespace genpass {
+// IWYU pragma: always_keep
 
-class CharClass {
-public:
-  CharClass();
-  CharClass(std::initializer_list<char>);
-  CharClass(std::string)
+#include <fmt/ostream.h>
+#include <nlohmann/json.hpp>
 
-  std::unordered_set<char> chars;
-  char default_;
+template <> struct fmt::formatter<nlohmann::json> : ostream_formatter {};
 
-public:
-  static const CharClass ascii;
-  static const CharClass base64;
-  static const CharClass alpha;
-  static const CharClass lowercase;
-  static const CharClass uppercase;
-  static const CharClass digit;
-  static const CharClass special;
-};
-
-} // namespace genpass
-
-#endif // __GENPASS_CHARCLASS_HPP__
+#endif // __GENPASS_UTIL_FMT_NLOHMANN_HPP__

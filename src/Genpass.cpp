@@ -18,15 +18,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#include "Genpass.hpp"
+#include "genpass/Genpass.hpp"
 
 #include <fmt/base.h>    // for println
 #include <fmt/format.h>  // for native_formatter::format
 #include <stdio.h>       // for stderr
 #include <utility>       // for move, pair
 
-#include "util/fmt_nlohmann.hpp"
-#include "Password.hpp"  // for Password
+#include "genpass/detail/fmt_nlohmann.hpp"
+#include "genpass/Password.hpp"  // for Password
 
 namespace genpass {
 

@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------- *\
-# src/CMakeLists.txt
+# include/CMakeLists.txt
 # This file is part of GenPass.
 #
-# Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
+# Copyright (C) 2026      David Bears <dbear4q@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,15 +18,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ---------------------------------------------------------------------- */
 
-target_sources(genpass
-  PRIVATE
-  Genpass.cpp
-  Password.cpp
-  Seed.cpp
+target_sources(genpass PUBLIC FILE_SET HEADERS
+  BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(genpass PRIVATE
-  nlohmann_json::nlohmann_json
-  OpenSSL::Crypto
-  fmt::fmt
-)
+add_subdirectory(genpass)

@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------- *\
- * src/Password.hpp
+ * include/genpass/Password.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2025      David Bears <dbear4q@gmail.com>
@@ -27,7 +27,7 @@
 #include <string>                 // for string, basic_string
 #include <unordered_set>          // for unordered_set
 
-#include "Seed.hpp"               // for Seed
+#include "genpass/Seed.hpp"               // for Seed
 
 namespace genpass {
 

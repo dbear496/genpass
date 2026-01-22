@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------- *\
- * src/util/IndirectIterator.hpp
+ * include/genpass/detail/IndirectIterator.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2026      David Bears <dbear4q@gmail.com>

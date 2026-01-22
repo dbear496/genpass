@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------- *\
- * src/util/ossl_ptr.hpp
+ * src/detail/ossl_ptr.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2026      David Bears <dbear4q@gmail.com>

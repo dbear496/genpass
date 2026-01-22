@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------- *\
- * src/util/serialize.hpp
+ * include/genpass/CharClass.hpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2025      David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#ifndef __GENPASS_UTIL_SERIALIZE_HPP__
-#define __GENPASS_UTIL_SERIALIZE_HPP__
+#ifndef __GENPASS_CHARCLASS_HPP__
+#define __GENPASS_CHARCLASS_HPP__
 
 namespace genpass {
 
-// template<typename T>
-// std::size_t serialize(unsigned char *dst, const T src);
-//
-// template<typename T>
-// std::size_t deserialize(T& dst, const unsigned char *src);
+class CharClass {
+public:
+  CharClass();
+  CharClass(std::initializer_list<char>);
+  CharClass(std::string)
 
-template<typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
-std::size_t serialize(unsigned char *dst, const T src) {
-  for(int i = 0; i < sizeof(T); i++)
-    dst[i] = (unsigned char)(src >> (i * 8));
-  return sizeof(T);
-}
+  std::unordered_set<char> chars;
+  char default_;
 
-template<typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
-std::size_t deserialize(T& dst, const unsigned char *src) {
-  dst = 0;
-  for(int i = 0; i < sizeof(T); i++)
-    dst |= (T)src[i] << (i * 8);
-  return sizeof(T);
-}
+public:
+  static const CharClass ascii;
+  static const CharClass base64;
+  static const CharClass alpha;
+  static const CharClass lowercase;
+  static const CharClass uppercase;
+  static const CharClass digit;
+  static const CharClass special;
+};
 
-}
+} // namespace genpass
 
-#endif // __GENPASS_UTIL_SERIALIZE_HPP__
+#endif // __GENPASS_CHARCLASS_HPP__

@@ -2,7 +2,7 @@
 # CMakeLists.txt
 # This file is part of GenPass.
 #
-# Copyright (C) 2025      David Bears <dbear4q@gmail.com>
+# Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -131,14 +131,29 @@ if(NOT CMAKE_CROSSCOMPILING AND INCLUDE_WHAT_YOU_USE AND
 endif()
 
 
+### targets
+add_library(genpass)
+target_compile_features(genpass PUBLIC cxx_std_20)
+set_target_properties(genpass PROPERTIES
+  OUTPUT_NAME ${LIBNAME}
+  EXPORT_NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${ABI_VERSION}
+)
+
+
 ### subdirectories
 add_subdirectory(src)
+add_subdirectory(include)
 
 
-### generate config packages
-include(CMakePackageConfigHelpers)
+### install targets
+install(TARGETS genpass
+  EXPORT genpass_export
+  FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_APPINCLUDEDIR}
+)
 
-# for install tree
+# config packages for install tree
 set(CONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${LIBNAME}")
 install(EXPORT genpass_export
   DESTINATION ${CONFIG_DIR}
@@ -146,6 +161,7 @@ install(EXPORT genpass_export
   NAMESPACE ${PROJECT_NAME}::
   EXPORT_PACKAGE_DEPENDENCIES
 )
+include(CMakePackageConfigHelpers)
 configure_package_config_file(mk/genpass-config.cmake.in
   cmake/genpass-config_installed.cmake
   INSTALL_DESTINATION "${CONFIG_DIR}"
@@ -162,12 +178,13 @@ foreach(config genpass-config genpass-config-version)
   )
 endforeach()
 
-# for build tree
+# config packages for build tree
 export(EXPORT genpass_export
   FILE cmake/genpass-targets.cmake
   NAMESPACE ${PROJECT_NAME}::
   EXPORT_PACKAGE_DEPENDENCIES
 )
+include(CMakePackageConfigHelpers)
 configure_package_config_file(mk/genpass-config.cmake.in
   cmake/genpass-config.cmake
   INSTALL_DESTINATION cmake

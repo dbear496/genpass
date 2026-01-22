@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------- *\
- * src/Genpass.hpp
+ * include/genpass/Genpass.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
@@ -29,8 +29,8 @@
 #include <string>                 // for string, hash, basic_string
 #include <unordered_map>          // for unordered_map
 
-#include "Password.hpp"           // for Password
-#include "util/IndirectIterator.hpp"
+#include "genpass/Password.hpp"           // for Password
+#include "genpass/detail/IndirectIterator.hpp"
 
 namespace genpass {
 

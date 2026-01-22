@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#include "Seed.hpp"
+#include "genpass/Seed.hpp"
 
 #include <openssl/core.h>        // for OSSL_PARAM_OCTET_STRING, OSSL_PARAM_...
 #include <openssl/core_names.h>  // for OSSL_KDF_PARAM_ITER, OSSL_KDF_PARAM_...
@@ -30,7 +30,7 @@
 #include <fstream>               // for basic_ifstream, basic_istream::read
 #include <stdexcept>             // for runtime_error
 
-#include "util/ossl_ptr.hpp"     // for ossl_unique_ptr
+#include "genpass/detail/ossl_ptr.hpp"     // for ossl_unique_ptr
 
 namespace genpass {
 

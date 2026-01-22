@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ---------------------------------------------------------------------- */
 
-#include "Password.hpp"
+#include "genpass/Password.hpp"
 
 #include <nlohmann/detail/json_ref.hpp>  // for json_ref
 #include <nlohmann/json.hpp>             // for basic_json
@@ -29,10 +29,10 @@
 #include <stdexcept>                     // for runtime_error, invalid_argument
 #include <functional>
 
-#include "Seed.hpp"                      // for Seed
-#include "util/ossl_ptr.hpp"             // for ossl_unique_ptr
-#include "util/serialize.hpp"            // for serialize
-#include "Genpass.hpp"
+#include "genpass/Seed.hpp"                      // for Seed
+#include "genpass/detail/ossl_ptr.hpp"             // for ossl_unique_ptr
+#include "genpass/detail/serialize.hpp"            // for serialize
+#include "genpass/Genpass.hpp"
 
 namespace genpass {
 
