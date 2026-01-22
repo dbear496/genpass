@@ -37,6 +37,32 @@ Genpass::Genpass() {
 
 Genpass::~Genpass() = default;
 
+Password&
+Genpass::addPassword(std::unique_ptr<Password>&& password) {
+  const auto res = passwords.insert({password->id, std::move(password)});
+  if(!res.second) throw std::runtime_error("password with ID already exists");
+  return *res.first->second;
+}
+
+Password&
+Genpass::newPassword(const std::string& algorithm, const std::string& id) {
+  const std::function<Password *()>& alg = algorithms.at(algorithm);
+  std::unique_ptr<Password> password(alg());
+  password->id = id;
+  return addPassword(std::move(password));
+}
+
+Password&
+Genpass::getPassword(const std::string& id) const {
+  return *passwords.at(id);
+}
+
+void
+Genpass::removePassword(const std::string& id) {
+  if(!passwords.erase(id))
+    throw std::out_of_range(fmt::format("no password with ID: {}", id));
+}
+
 template<>
 void
 Genpass::deserialize<nlohmann::json>(nlohmann::json&& in) {
@@ -74,6 +100,22 @@ Genpass::serialize() const {
     passwordsJson += pwEntry.second->serialize();
   }
   return ret;
+}
+
+void
+Genpass::clearPasswords() {
+  passwords.clear();
+}
+
+void
+Genpass::registerAlgorithm(const std::string& name,
+  std::function<Password *()> constructor
+) {
+  const auto res = algorithms.insert({name, constructor});
+  if(!res.second) throw std::runtime_error(fmt::format(
+    "algorithm already exists: {}",
+    name
+  ));
 }
 
 } // namespace genpass

@@ -44,15 +44,39 @@ Password::Password(const std::string& id)
   : id(id), serial(0)
 { }
 
+Password::~Password() = default;
+
 nlohmann::json
 Password::serialize() const {
   return nlohmann::json{
-    {"id", id},
     {"algorithm", algorithmName()},
+    {"id", id},
     {"serial", serial},
     {"note", note}
   };
 }
+
+void
+Password::deserialize(const nlohmann::json& json) {
+  const std::string alg = json.at("algorithm").get<std::string>();
+  if(alg != algorithmName()) throw std::runtime_error("algorithm mismatch");
+
+  json.at("id").get_to(id);
+  json.at("serial").get_to(serial);
+  json.at("note").get_to(note);
+}
+
+void
+to_json(nlohmann::json& json, const Password& password) {
+  json = password.serialize();
+}
+
+void
+from_json(const nlohmann::json& json, Password& password) {
+  password.deserialize(json);
+}
+
+PasswordV2::PasswordV2() : PasswordV2("") { }
 
 PasswordV2::PasswordV2(const std::string& id)
   : Password(id), length(48), postfix("aA1!"), fill('0')
@@ -141,6 +165,16 @@ PasswordV2::serialize() const {
     {"fill", fill}
   });
   return json;
+}
+
+void
+PasswordV2::deserialize(const nlohmann::json& json) {
+  Password::deserialize(json);
+
+  json.at("length").get_to(length);
+  json.at("postfix").get_to(postfix);
+  json.at("bannedChars").get_to(bannedChars);
+  json.at("fill").get_to(fill);
 }
 
 } // namespace genpass

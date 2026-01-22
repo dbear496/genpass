@@ -42,6 +42,7 @@ public:
   virtual std::string generate(const Seed& seed) const = 0;
 
   virtual const std::string& algorithmName() const = 0;
+
   virtual nlohmann::json serialize() const;
   virtual void deserialize(const nlohmann::json& json);
 
@@ -49,6 +50,9 @@ public:
   std::int32_t serial;
   std::string note;
 };
+
+void to_json(nlohmann::json& json, const Password& password);
+void from_json(const nlohmann::json& json, Password& password);
 
 class PasswordV2 : public Password {
 public:
