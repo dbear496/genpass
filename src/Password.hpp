@@ -31,31 +31,39 @@
 
 namespace genpass {
 
+class Genpass;
+
 class Password {
 public:
-  Password(const std::string& id);
+  Password();
+  explicit Password(const std::string& id);
   virtual ~Password();
 
   virtual std::string generate(const Seed& seed) const = 0;
 
   virtual const std::string& algorithmName() const = 0;
   virtual nlohmann::json serialize() const;
+  virtual void deserialize(const nlohmann::json& json);
 
-  const std::string id;
+  std::string id;
   std::int32_t serial;
   std::string note;
 };
 
 class PasswordV2 : public Password {
 public:
-  PasswordV2(const std::string& id);
+  PasswordV2();
+  explicit PasswordV2(const std::string& id);
   virtual ~PasswordV2();
+
+  virtual const std::string& algorithmName() const { return algName; }
+  static void registerWith(Genpass& genpass);
+
+  virtual nlohmann::json serialize() const;
+  virtual void deserialize(const nlohmann::json& json);
 
   virtual std::string generate(const Seed& seed) const;
   virtual std::string prepare(const std::string& base) const;
-
-  virtual const std::string& algorithmName() const { return algName; }
-  virtual nlohmann::json serialize() const;
 
   std::size_t length;
   std::string postfix;

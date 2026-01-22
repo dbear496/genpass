@@ -30,29 +30,50 @@
 #include <unordered_map>          // for unordered_map
 
 #include "Password.hpp"           // for Password
+#include "util/IndirectIterator.hpp"
 
 namespace genpass {
 
 class Genpass {
-  using Loader =
-    std::function<std::unique_ptr<Password>(const nlohmann::json&)>;
+private:
+  std::unordered_map<std::string, std::unique_ptr<Password>> passwords;
+  std::unordered_map<std::string, std::function<Password *()>> algorithms;
 
 public:
+  using PasswordIterator = detail::IndirectIterator<
+    Password, decltype(passwords)::iterator,
+    [](const auto& it) -> Password * { return it->second.get(); }
+  >;
+  using ConstPasswordIterator = detail::IndirectIterator<
+    const Password, decltype(passwords)::const_iterator,
+    [](const auto& it) -> const Password * { return it->second.get(); }
+  >;
+
+  Genpass();
+  ~Genpass();
+
+  Password& addPassword(std::unique_ptr<Password>&& password);
+  Password& newPassword(const std::string& algorithm, const std::string& id);
   Password& getPassword(const std::string& id) const;
-  void addPassword(std::unique_ptr<Password>&& password);
   void removePassword(const std::string& id);
 
-  void registerLoader(const std::string& name, Loader loader);
+  PasswordIterator passwords_begin() { return passwords.begin(); }
+  PasswordIterator passwords_end() { return passwords.end(); }
+  ConstPasswordIterator passwords_cbegin() const { return passwords.cbegin(); }
+  ConstPasswordIterator passwords_cend() const { return passwords.cend(); }
+
+  void updateId(const std::string& oldId);
+  void updateAllIds();
 
   template<typename I>
   void deserialize(I&& in) {
     deserialize(nlohmann::json::parse(in));
   }
   nlohmann::json serialize() const;
+  void clearPasswords();
 
-private:
-  std::unordered_map<std::string, Loader> loaders;
-  std::unordered_map<std::string, std::unique_ptr<Password>> passwords;
+  void registerAlgorithm(const std::string& name,
+    std::function<Password *()> constructor);
 };
 
 } // namespace genpass

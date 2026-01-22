@@ -27,7 +27,14 @@ target_sources(genpass PUBLIC FILE_SET HEADERS FILES
   Genpass.hpp
   Password.hpp
   Seed.hpp
+  util/IndirectIterator.hpp
 )
+target_sources(genpass PRIVATE
+  util/fmt_nlohmann.hpp
+  util/ossl_ptr.hpp
+  util/serialize.hpp
+)
+
 target_compile_features(genpass PUBLIC cxx_std_20)
 
 target_link_libraries(genpass

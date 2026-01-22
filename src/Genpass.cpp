@@ -30,29 +30,33 @@
 
 namespace genpass {
 
+Genpass::Genpass() {
+  // register the default algorithm
+  PasswordV2::registerWith(*this);
+}
+
+Genpass::~Genpass() = default;
+
 template<>
 void
 Genpass::deserialize<nlohmann::json>(nlohmann::json&& in) {
   bool unknownAlg = false;
 
-  for(const auto& pw : in.at("passwords")) {
-    std::string algName = pw.at("algorithm").get<std::string>();
+  for(const auto& pwJson : in.at("passwords")) {
+    std::string algName = pwJson.at("algorithm").get<std::string>();
 
-    auto loaderLookup = loaders.find(algName);
-    if(loaderLookup == loaders.end()) {
+    auto algorithmLookup = algorithms.find(algName);
+    if(algorithmLookup == algorithms.end()) {
       unknownAlg = true;
       fmt::println(stderr, "error: unknown algorithm for %s: %s",
-        pw.at("id"), algName);
+        pwJson.at("id"), algName);
       continue;
     }
-    Loader& loader = loaderLookup->second;
+    std::function<Password *()>& algorithm = algorithmLookup->second;
 
-    std::unique_ptr<Password> password(loader(pw));
-
-    if(!passwords.insert({password->id, std::move(password)}).second) {
-      fmt::println(stderr, "warning: password with this id already exists: %s",
-        pw.at("id"));
-    }
+    std::unique_ptr<Password> password(algorithm());
+    password->deserialize(pwJson);
+    addPassword(std::move(password));
   }
 
   if(unknownAlg) {

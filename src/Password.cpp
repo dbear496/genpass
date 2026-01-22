@@ -27,12 +27,18 @@
 #include <cstring>                       // for memcpy
 #include <map>                           // for operator==
 #include <stdexcept>                     // for runtime_error, invalid_argument
+#include <functional>
 
 #include "Seed.hpp"                      // for Seed
 #include "util/ossl_ptr.hpp"             // for ossl_unique_ptr
 #include "util/serialize.hpp"            // for serialize
+#include "Genpass.hpp"
 
 namespace genpass {
+
+Password::Password()
+  : Password("")
+{ }
 
 Password::Password(const std::string& id)
   : id(id), serial(0)
@@ -51,6 +57,13 @@ Password::serialize() const {
 PasswordV2::PasswordV2(const std::string& id)
   : Password(id), length(48), postfix("aA1!"), fill('0')
 { }
+
+PasswordV2::~PasswordV2() = default;
+
+void
+PasswordV2::registerWith(Genpass& genpass) {
+  genpass.registerAlgorithm(algName, [](){ return new PasswordV2(); });
+}
 
 std::string
 PasswordV2::generate(const Seed& seed) const {
