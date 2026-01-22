@@ -142,21 +142,21 @@ include(CMakePackageConfigHelpers)
 set(CONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${LIBNAME}")
 install(EXPORT genpass_export
   DESTINATION ${CONFIG_DIR}
-  FILE GenpassTargets.cmake
+  FILE genpass-targets.cmake
   NAMESPACE ${PROJECT_NAME}::
   EXPORT_PACKAGE_DEPENDENCIES
 )
-configure_package_config_file(mk/GenpassConfig.cmake.in
-  cmake/GenpassConfig_Installed.cmake
+configure_package_config_file(mk/genpass-config.cmake.in
+  cmake/genpass-config_installed.cmake
   INSTALL_DESTINATION "${CONFIG_DIR}"
   # PATH_VARS
   # INSTALL_PREFIX
 )
-write_basic_package_version_file(cmake/GenpassConfigVersion_Installed.cmake
+write_basic_package_version_file(cmake/genpass-config-version_installed.cmake
   COMPATIBILITY SameMajorVersion
 )
-foreach(config GenpassConfig GenpassConfigVersion)
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/${config}_Installed.cmake"
+foreach(config genpass-config genpass-config-version)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/${config}_installed.cmake"
     DESTINATION "${CONFIG_DIR}"
     RENAME ${config}.cmake
   )
@@ -164,17 +164,17 @@ endforeach()
 
 # for build tree
 export(EXPORT genpass_export
-  FILE cmake/GenpassTargets.cmake
+  FILE cmake/genpass-targets.cmake
   NAMESPACE ${PROJECT_NAME}::
   EXPORT_PACKAGE_DEPENDENCIES
 )
-configure_package_config_file(mk/GenpassConfig.cmake.in
-  cmake/GenpassConfig.cmake
+configure_package_config_file(mk/genpass-config.cmake.in
+  cmake/genpass-config.cmake
   INSTALL_DESTINATION cmake
   # PATH_VARS
   # INSTALL_PREFIX
 )
-write_basic_package_version_file(cmake/GenpassConfigVersion.cmake
+write_basic_package_version_file(cmake/genpass-config-version.cmake
   COMPATIBILITY SameMajorVersion
 )
 

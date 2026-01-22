@@ -20,6 +20,6 @@
 
 @PACKAGE_INIT@
 
-include("${CMAKE_CURRENT_LIST_DIR}/GenpassTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/genpass-targets.cmake")
 
-check_required_components(${PACKAGE_FIND_NAME})
+check_required_components("${PACKAGE_FIND_NAME}")
