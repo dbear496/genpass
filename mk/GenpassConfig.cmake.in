@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------- *\
-# src/CMakeLists.txt
+# mk/GenpassConfig.cmake.in
 # This file is part of GenPass.
 #
 # Copyright (C) 2026      David Bears <dbear4q@gmail.com>
@@ -18,19 +18,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ---------------------------------------------------------------------- */
 
-add_library(misc-utils OBJECT
-  fmt_nlohmann.hpp
-  ossl_ptr.hpp
-  serialize.hpp
-)
+@PACKAGE_INIT@
 
-target_include_directories(misc-utils
-  PUBLIC
-  ..
-)
+include("${CMAKE_CURRENT_LIST_DIR}/GenpassTargets.cmake")
 
-target_link_libraries(misc-utils
-  PUBLIC
-  fmt::fmt
-  nlohmann_json::nlohmann_json
-)
+check_required_components(${PACKAGE_FIND_NAME})

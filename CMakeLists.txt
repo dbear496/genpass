@@ -26,8 +26,11 @@ project(genpass
   DESCRIPTION "A unique password manager that doesn't store passwords."
   HOMEPAGE_URL "https://github.com/dbear496/genpass"
 )
-set(ABI_VERSION 0)
 set(PROJECT_NAME_PRETTY "GenPass")
+
+
+### ABI version
+set(ABI_VERSION_FOR_2.0 0)
 
 
 ### dependencies
@@ -36,6 +39,9 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 find_package(nlohmann_json 3.12.0 REQUIRED)
 find_package(OpenSSL 3.6.0 COMPONENTS crypto REQUIRED)
 find_package(fmt 12.0 REQUIRED)
+
+set(CMAKE_EXPERIMENTAL_EXPORT_PACKAGE_DEPENDENCIES
+  1942b4fa-b2c5-4546-9385-83f254070067)
 
 
 ### build configurations
@@ -90,6 +96,10 @@ elseif(NOT DEFINED VERSION_${BUILD_TYPE_UPPER})
 endif()
 message(STATUS "${PROJECT_NAME_PRETTY} version: ${FULL_PROJECT_VERSION}")
 
+set(ABI_VERSION ${ABI_VERSION_FOR_${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}})
+
+set(LIBNAME ${PROJECT_NAME}-${PROJECT_VERSION_MAJOR})
+
 
 ### compilation options
 add_compile_options("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
@@ -101,13 +111,13 @@ endif()
 ### install dirs
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_APPDATADIR
-  ${CMAKE_INSTALL_DATADIR}/${CMAKE_PROJECT_NAME})
+  ${CMAKE_INSTALL_DATADIR}/${LIBNAME})
 set(CMAKE_INSTALL_FULL_APPDATADIR
-  ${CMAKE_INSTALL_FULL_DATADIR}/${CMAKE_PROJECT_NAME})
+  ${CMAKE_INSTALL_FULL_DATADIR}/${LIBNAME})
 set(CMAKE_INSTALL_APPINCLUDEDIR
-  ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR})
+  ${CMAKE_INSTALL_INCLUDEDIR}/${LIBNAME})
 set(CMAKE_INSTALL_FULL_APPINCLUDEDIR
-  ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR})
+  ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${LIBNAME})
 
 
 ### include what you use
@@ -123,6 +133,50 @@ endif()
 
 ### subdirectories
 add_subdirectory(src)
+
+
+### generate config packages
+include(CMakePackageConfigHelpers)
+
+# for install tree
+set(CONFIG_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${LIBNAME}")
+install(EXPORT genpass_export
+  DESTINATION ${CONFIG_DIR}
+  FILE GenpassTargets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_PACKAGE_DEPENDENCIES
+)
+configure_package_config_file(mk/GenpassConfig.cmake.in
+  cmake/GenpassConfig_Installed.cmake
+  INSTALL_DESTINATION "${CONFIG_DIR}"
+  # PATH_VARS
+  # INSTALL_PREFIX
+)
+write_basic_package_version_file(cmake/GenpassConfigVersion_Installed.cmake
+  COMPATIBILITY SameMajorVersion
+)
+foreach(config GenpassConfig GenpassConfigVersion)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake/${config}_Installed.cmake"
+    DESTINATION "${CONFIG_DIR}"
+    RENAME ${config}.cmake
+  )
+endforeach()
+
+# for build tree
+export(EXPORT genpass_export
+  FILE cmake/GenpassTargets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_PACKAGE_DEPENDENCIES
+)
+configure_package_config_file(mk/GenpassConfig.cmake.in
+  cmake/GenpassConfig.cmake
+  INSTALL_DESTINATION cmake
+  # PATH_VARS
+  # INSTALL_PREFIX
+)
+write_basic_package_version_file(cmake/GenpassConfigVersion.cmake
+  COMPATIBILITY SameMajorVersion
+)
 
 
 ### packaging

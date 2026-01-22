@@ -18,37 +18,33 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ---------------------------------------------------------------------- */
 
-add_subdirectory(util)
-
-set(LIBNAME ${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}) # genpass-2
-
-add_library(${LIBNAME}
+add_library(genpass
   Genpass.cpp
   Password.cpp
   Seed.cpp
 )
-target_sources(${LIBNAME} PUBLIC FILE_SET HEADERS FILES
+target_sources(genpass PUBLIC FILE_SET HEADERS FILES
   Genpass.hpp
   Password.hpp
   Seed.hpp
 )
+target_compile_features(genpass PUBLIC cxx_std_20)
 
-
-target_link_libraries(${LIBNAME}
+target_link_libraries(genpass
   PUBLIC
   nlohmann_json::nlohmann_json
   OpenSSL::Crypto
   PRIVATE
   fmt::fmt
-  misc-utils
 )
-target_include_directories(${LIBNAME} PUBLIC .)
-target_compile_features(${LIBNAME} PUBLIC cxx_std_20)
-set_target_properties(${LIBNAME} PROPERTIES
+set_target_properties(genpass PROPERTIES
+  OUTPUT_NAME ${LIBNAME}
+  EXPORT_NAME ${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   SOVERSION ${ABI_VERSION}
 )
 
-install(TARGETS ${LIBNAME}
+install(TARGETS genpass
+  EXPORT genpass_export
   FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_APPINCLUDEDIR}
 )
