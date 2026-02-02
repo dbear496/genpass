@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------- *\
-# mk/GenpassConfig.cmake.in
+# mk/genpass.iwyu
 # This file is part of GenPass.
 #
-# Copyright (C) 2026      David Bears <dbear4q@gmail.com>
+# Copyright (C) 2026       David Bears <dbear4q@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,14 +18,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ---------------------------------------------------------------------- */
 
-@PACKAGE_INIT@
-
-include("${CMAKE_CURRENT_LIST_DIR}/genpass-targets.cmake")
-
-if(EXISTS "@PACKAGE_IWYU_MAP@")
-  list(APPEND GENPASS_INCLUDE_WHAT_YOU_USE
-    -Xiwyu "--mapping_file=@PACKAGE_IWYU_MAP@"
-  )
-endif()
-
-check_required_components("${PACKAGE_FIND_NAME}")
+[
+{ "include": ["<genpass/detail/IndirectIterator.hpp>", "private", "<genpass/genpass.hpp>", "public"] },
+]

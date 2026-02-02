@@ -21,6 +21,10 @@
 #ifndef __GENPASS_UTIL_SERIALIZE_HPP__
 #define __GENPASS_UTIL_SERIALIZE_HPP__
 
+#ifndef __GENPASS_PRIVATE__
+// IWYU pragma: private
+#endif
+
 namespace genpass {
 
 // template<typename T>

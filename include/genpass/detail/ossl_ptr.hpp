@@ -22,6 +22,10 @@
 #ifndef __GENPASS_UTIL_OSSL_PTR_HPP__
 #define __GENPASS_UTIL_OSSL_PTR_HPP__
 
+#ifndef __GENPASS_PRIVATE__
+// IWYU pragma: private
+#endif
+
 #include <memory>
 
 namespace genpass {

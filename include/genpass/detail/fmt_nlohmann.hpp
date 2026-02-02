@@ -21,6 +21,9 @@
 #ifndef __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 #define __GENPASS_UTIL_FMT_NLOHMANN_HPP__
 
+#ifndef __GENPASS_PRIVATE__
+// IWYU pragma: private
+#endif
 // IWYU pragma: always_keep
 
 #include <fmt/ostream.h>

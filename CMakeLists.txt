@@ -106,6 +106,7 @@ add_compile_options("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
 if(DEFINED GENPASS_SHARED_LIBS)
   set(BUILD_SHARED_LIBS ${GENPASS_SHARED_LIBS})
 endif()
+add_compile_definitions("__GENPASS_PRIVATE__")
 
 
 ### install dirs
@@ -128,6 +129,11 @@ if(NOT CMAKE_CROSSCOMPILING AND INCLUDE_WHAT_YOU_USE AND
 	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE}
 		-w -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/mk/iwyu.map)
 	set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
+endif()
+set(EXPORT_IWYU_MAP "${PROJECT_SOURCE_DIR}/mk/genpass.iwyu")
+set(INSTALL_IWYU_MAP "${CMAKE_INSTALL_APPINCLUDEDIR}/genpass.iwyu")
+if(GENPASS_INSTALL_IWYU_MAPPINGS)
+  install(FILES "mk/genpass.iwyu" DESTINATION "${CMAKE_INSTALL_APPINCLUDEDIR}")
 endif()
 
 
@@ -162,10 +168,11 @@ install(EXPORT genpass_export
   EXPORT_PACKAGE_DEPENDENCIES
 )
 include(CMakePackageConfigHelpers)
+set(IWYU_MAP "${INSTALL_IWYU_MAP}")
 configure_package_config_file(mk/genpass-config.cmake.in
   cmake/genpass-config_installed.cmake
   INSTALL_DESTINATION "${CONFIG_DIR}"
-  # PATH_VARS
+  PATH_VARS IWYU_MAP
   # INSTALL_PREFIX
 )
 write_basic_package_version_file(cmake/genpass-config-version_installed.cmake
@@ -185,10 +192,11 @@ export(EXPORT genpass_export
   EXPORT_PACKAGE_DEPENDENCIES
 )
 include(CMakePackageConfigHelpers)
+set(IWYU_MAP "${EXPORT_IWYU_MAP}")
 configure_package_config_file(mk/genpass-config.cmake.in
   cmake/genpass-config.cmake
   INSTALL_DESTINATION cmake
-  # PATH_VARS
+  PATH_VARS IWYU_MAP
   # INSTALL_PREFIX
 )
 write_basic_package_version_file(cmake/genpass-config-version.cmake

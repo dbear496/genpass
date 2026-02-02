@@ -21,16 +21,17 @@
 #ifndef __GENPASS_GENPASS_HPP__
 #define __GENPASS_GENPASS_HPP__
 
-#include <nlohmann/json.hpp>      // for basic_json
-#include <nlohmann/json_fwd.hpp>  // for json
-#include <functional>             // for function
-#include <map>                    // for operator==
-#include <memory>                 // for unique_ptr
-#include <string>                 // for string, hash, basic_string
-#include <unordered_map>          // for unordered_map
+#include <nlohmann/json.hpp>                    // for basic_json
+#include <nlohmann/json_fwd.hpp>                // for json
+#include <cstddef>                              // for size_t
+#include <functional>                           // for function
+#include <map>                                  // for operator==
+#include <memory>                               // for unique_ptr
+#include <string>                               // for string, basic_string
+#include <unordered_map>                        // for unordered_map
 
-#include "genpass/Password.hpp"           // for Password
-#include "genpass/detail/IndirectIterator.hpp"
+#include "genpass/Password.hpp"                 // for Password
+#include "genpass/detail/IndirectIterator.hpp"  // for IndirectIterator
 
 namespace genpass {
 
