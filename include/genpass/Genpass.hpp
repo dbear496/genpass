@@ -49,6 +49,10 @@ public:
     const Password, decltype(passwords)::const_iterator,
     [](const auto& it) -> const Password * { return it->second.get(); }
   >;
+  using AlgorithmNameIterator = detail::IndirectIterator<
+    const std::string, decltype(algorithms)::const_iterator,
+    [](const auto& it) -> const std::string * { return &it->first; }
+  >;
 
   Genpass();
   ~Genpass();
@@ -58,10 +62,16 @@ public:
   Password& getPassword(const std::string& id) const;
   void removePassword(const std::string& id);
 
-  PasswordIterator passwords_begin() { return passwords.begin(); }
-  PasswordIterator passwords_end() { return passwords.end(); }
-  ConstPasswordIterator passwords_cbegin() const { return passwords.cbegin(); }
-  ConstPasswordIterator passwords_cend() const { return passwords.cend(); }
+  std::size_t passwordCount() const;
+  Password *getPasswordPtr(const std::string& id) const;
+
+  PasswordIterator passwords_begin();
+  PasswordIterator passwords_end();
+  ConstPasswordIterator passwords_cbegin() const;
+  ConstPasswordIterator passwords_cend() const;
+
+  AlgorithmNameIterator algorithms_begin() const;
+  AlgorithmNameIterator algorithms_end() const;
 
   void updateId(const std::string& oldId);
   void updateAllIds();

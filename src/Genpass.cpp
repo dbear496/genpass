@@ -58,10 +58,48 @@ Genpass::getPassword(const std::string& id) const {
   return *passwords.at(id);
 }
 
+Password *
+Genpass::getPasswordPtr(const std::string& id) const {
+  auto find = passwords.find(id);
+  if(find == passwords.end()) return nullptr;
+  else return find->second.get();
+}
+
 void
 Genpass::removePassword(const std::string& id) {
   if(!passwords.erase(id))
     throw std::out_of_range(fmt::format("no password with ID: {}", id));
+}
+
+std::size_t
+Genpass::passwordCount() const {
+  return passwords.size();
+}
+
+Genpass::PasswordIterator
+Genpass::passwords_begin() {
+  return passwords.begin();
+}
+Genpass::PasswordIterator
+Genpass::passwords_end() {
+  return passwords.end();
+}
+Genpass::ConstPasswordIterator
+Genpass::passwords_cbegin() const {
+  return passwords.cbegin();
+}
+Genpass::ConstPasswordIterator
+Genpass::passwords_cend() const {
+  return passwords.cend();
+}
+
+Genpass::AlgorithmNameIterator
+Genpass::algorithms_begin() const {
+  return algorithms.cbegin();
+}
+Genpass::AlgorithmNameIterator
+Genpass::algorithms_end() const {
+  return algorithms.cend();
 }
 
 template<>
