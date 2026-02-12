@@ -127,7 +127,7 @@ PasswordV2::generate(const Seed& seed) const {
   if(!EVP_MAC_final(mac.get(), macOut, &macOutLen, macSize))
     throw std::runtime_error("failed to finalize MAC");
 
-  unsigned char encoded[(macOutLen / 3 + 1) * 4];
+  unsigned char encoded[(macOutLen + 2) / 3 * 4 + 1];
   EVP_EncodeBlock(encoded, macOut, macOutLen);
 
   return prepare((char *)encoded);
@@ -153,6 +153,12 @@ PasswordV2::prepare(const std::string& base) const {
   pw += postfix;
 
   return pw;
+}
+
+void
+PasswordV2::validate() const {
+  if(prefix.length() > length) throw std::invalid_argument(
+    "length should not be shorter than the static prefix");
 }
 
 nlohmann::json

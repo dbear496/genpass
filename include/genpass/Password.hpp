@@ -40,6 +40,7 @@ public:
   virtual ~Password();
 
   virtual std::string generate(const Seed& seed) const = 0;
+  virtual void validate() const { }
 
   virtual const std::string& algorithmName() const = 0;
 
@@ -60,21 +61,21 @@ public:
   explicit PasswordV2(const std::string& id);
   virtual ~PasswordV2();
 
-  virtual const std::string& algorithmName() const { return algName; }
+  virtual const std::string& algorithmName() const override { return algName; }
   static void registerWith(Genpass& genpass);
 
-  virtual nlohmann::json serialize() const;
-  virtual void deserialize(const nlohmann::json& json);
+  virtual nlohmann::json serialize() const override;
+  virtual void deserialize(const nlohmann::json& json) override;
 
-  virtual std::string generate(const Seed& seed) const;
-  virtual std::string prepare(const std::string& base) const;
+  virtual std::string generate(const Seed& seed) const override;
+  virtual std::string prepare(const std::string& base) const override;
+  virtual void validate() const override;
 
   std::size_t length;
   std::string postfix;
   std::unordered_set<char> bannedChars;
   char fill;
 
-private:
   static constexpr std::string algName = "genpass-2.0";
 };
 
