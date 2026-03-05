@@ -126,14 +126,15 @@ find_program(INCLUDE_WHAT_YOU_USE NAMES include-what-you-use)
 if(NOT CMAKE_CROSSCOMPILING AND INCLUDE_WHAT_YOU_USE AND
 	NOT GENPASS_CXX_FLAGS_${BUILD_TYPE_UPPER} MATCHES "(^| )-w( |$)"
 )
-	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE}
-		-w -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/mk/iwyu.map)
-	set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
+	set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE} -w
+    -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/mk/iwyu/c++.iwyu)
+	set(CMAKE_C_INCLUDE_WHAT_YOU_USE ${INCLUDE_WHAT_YOU_USE} -w
+    -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/mk/iwyu/c.iwyu)
 endif()
-set(EXPORT_IWYU_MAP "${PROJECT_SOURCE_DIR}/mk/genpass.iwyu")
+set(EXPORT_IWYU_MAP "${PROJECT_SOURCE_DIR}/mk/iwyu/genpass.iwyu")
 set(INSTALL_IWYU_MAP "${CMAKE_INSTALL_APPINCLUDEDIR}/genpass.iwyu")
-if(GENPASS_INSTALL_IWYU_MAPPINGS)
-  install(FILES "mk/genpass.iwyu" DESTINATION "${CMAKE_INSTALL_APPINCLUDEDIR}")
+if(GENPASS_INSTALL_IWYU_MAPPING)
+  install(FILES "mk/iwyu/genpass.iwyu" DESTINATION "${CMAKE_INSTALL_APPINCLUDEDIR}")
 endif()
 
 
@@ -169,7 +170,7 @@ install(EXPORT genpass_export
 )
 include(CMakePackageConfigHelpers)
 set(IWYU_MAP "${INSTALL_IWYU_MAP}")
-configure_package_config_file(mk/genpass-config.cmake.in
+configure_package_config_file(mk/cmake/genpass-config.cmake.in
   cmake/genpass-config_installed.cmake
   INSTALL_DESTINATION "${CONFIG_DIR}"
   PATH_VARS IWYU_MAP
@@ -193,7 +194,7 @@ export(EXPORT genpass_export
 )
 include(CMakePackageConfigHelpers)
 set(IWYU_MAP "${EXPORT_IWYU_MAP}")
-configure_package_config_file(mk/genpass-config.cmake.in
+configure_package_config_file(mk/cmake/genpass-config.cmake.in
   cmake/genpass-config.cmake
   INSTALL_DESTINATION cmake
   PATH_VARS IWYU_MAP

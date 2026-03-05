@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------- *\
-# mk/iwyu.map
+# mk/iwyu/c++.iwyu
 # This file is part of GenPass.
 #
-# Copyright (C) 2025       David Bears <dbear4q@gmail.com>
+# Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,7 +19,9 @@
 # ---------------------------------------------------------------------- */
 
 [
-{ symbol: [abs, private, <cmath>, public] },
-{ symbol: [std::pair, private, <utility>, public] },
 { symbol: [assert, private, <cassert>, public] },
+{ symbol: [stdin, private, <cstdio>, public] },
+{ symbol: [stdout, private, <cstdio>, public] },
+{ symbol: [stderr, private, <cstdio>, public] },
+{ symbol: [std::pair, private, <utility>, public] },
 ]

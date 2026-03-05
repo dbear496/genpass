@@ -21,10 +21,6 @@
 #ifndef __GENPASS_UTIL_INDIRECTITERATOR_HPP__
 #define __GENPASS_UTIL_INDIRECTITERATOR_HPP__
 
-#ifndef __GENPASS_PRIVATE__
-// IWYU pragma: private, include <genpass/Genpass.hpp>
-#endif
-
 #include <cstddef>
 
 namespace genpass::detail {
