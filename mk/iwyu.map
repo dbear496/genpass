@@ -21,4 +21,5 @@
 [
 { symbol: [abs, private, <cmath>, public] },
 { symbol: [std::pair, private, <utility>, public] },
+{ symbol: [assert, private, <cassert>, public] },
 ]

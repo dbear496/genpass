@@ -37,8 +37,8 @@ namespace genpass {
 
 class Genpass {
 private:
-  std::unordered_map<std::string, std::unique_ptr<Password>> passwords;
-  std::unordered_map<std::string, std::function<Password *()>> algorithms;
+  std::map<std::string, std::unique_ptr<Password>> passwords;
+  std::map<std::string, std::function<Password *()>> algorithms;
 
 public:
   using PasswordIterator = detail::IndirectIterator<

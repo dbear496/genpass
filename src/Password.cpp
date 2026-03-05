@@ -157,7 +157,7 @@ PasswordV2::prepare(const std::string& base) const {
 
 void
 PasswordV2::validate() const {
-  if(prefix.length() > length) throw std::invalid_argument(
+  if(postfix.length() > length) throw std::invalid_argument(
     "length should not be shorter than the static prefix");
 }
 

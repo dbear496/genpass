@@ -25,6 +25,7 @@
 #include <stdio.h>               // for stderr
 #include <stdexcept>             // for runtime_error, out_of_range
 #include <utility>               // for pair, move
+#include <set>
 
 #include "genpass/Password.hpp"  // for Password, PasswordV2
 #include "genpass/detail/fmt_nlohmann.hpp"
@@ -41,7 +42,7 @@ Genpass::~Genpass() = default;
 Password&
 Genpass::addPassword(std::unique_ptr<Password>&& password) {
   const auto res = passwords.insert({password->id, std::move(password)});
-  if(!res.second) throw std::runtime_error("password with ID already exists");
+  if(!res.second) throw std::logic_error("password with ID already exists");
   return *res.first->second;
 }
 
@@ -58,6 +59,11 @@ Genpass::getPassword(const std::string& id) const {
   return *passwords.at(id);
 }
 
+std::size_t
+Genpass::passwordCount() const {
+  return passwords.size();
+}
+
 Password *
 Genpass::getPasswordPtr(const std::string& id) const {
   auto find = passwords.find(id);
@@ -71,9 +77,56 @@ Genpass::removePassword(const std::string& id) {
     throw std::out_of_range(fmt::format("no password with ID: {}", id));
 }
 
-std::size_t
-Genpass::passwordCount() const {
-  return passwords.size();
+void
+Genpass::updateId(const std::string& oldId) {
+  auto pwIt = passwords.find(oldId);
+  if(pwIt == passwords.end())
+    throw std::out_of_range(fmt::format(
+      "no password registered with ID: {}", oldId));
+  const std::string& newId = pwIt->second->id;
+  if(newId == oldId) return;
+  if(passwords.find(newId) != passwords.end())
+    throw std::logic_error(fmt::format(
+      "a password with this ID already exists: {}", newId));
+  auto node = passwords.extract(pwIt);
+  node.key() = newId;
+  auto result = passwords.insert(std::move(node));
+  if(!result.inserted)
+    throw std::runtime_error("failed while updating password ID");
+}
+
+void
+Genpass::updateAllIds() {
+  using pws = decltype(passwords);
+
+  for(pws::iterator it = passwords.begin(); it != passwords.end(); ++it) {
+    const std::string& id = it->second->id;
+    if(it->first == id) {
+      ++it;
+      continue;
+    }
+
+    std::set<std::string> dsts;
+    pws::iterator jt = it;
+    // first verify that reordering is possible without conflicts
+    while((jt = passwords.find(jt->second->id)) != passwords.end() && jt != it)
+      if(!dsts.insert(jt->second->id).second)
+        throw std::logic_error(fmt::format(
+          "found duplicate password IDs: {}", jt->second->id));
+    // ...then do the actual reordering
+    while((jt = passwords.find(it->second->id)) != passwords.end() && jt != it)
+      std::swap(it->second, jt->second);
+    // the last element may need to be moved instead of swapped
+    if(jt == passwords.end()) {
+      pws::node_type node = passwords.extract(it++);
+      node.key() = id;
+      auto result = passwords.insert(std::move(node));
+      assert(result.inserted);
+    }
+    else {
+      ++it;
+    }
+  }
 }
 
 Genpass::PasswordIterator

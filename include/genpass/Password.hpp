@@ -25,7 +25,7 @@
 #include <cstddef>                // for size_t
 #include <cstdint>                // for int32_t
 #include <string>                 // for string, basic_string
-#include <unordered_set>          // for unordered_set
+#include <set>                    // for set
 
 #include "genpass/Seed.hpp"               // for Seed
 
@@ -68,12 +68,12 @@ public:
   virtual void deserialize(const nlohmann::json& json) override;
 
   virtual std::string generate(const Seed& seed) const override;
-  virtual std::string prepare(const std::string& base) const override;
+  virtual std::string prepare(const std::string& base) const;
   virtual void validate() const override;
 
   std::size_t length;
   std::string postfix;
-  std::unordered_set<char> bannedChars;
+  std::set<char> bannedChars;
   char fill;
 
   static constexpr std::string algName = "genpass-2.0";
