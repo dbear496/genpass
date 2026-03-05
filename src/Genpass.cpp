@@ -22,10 +22,11 @@
 
 #include <fmt/base.h>            // for println
 #include <fmt/format.h>          // for format, native_formatter::format
-#include <stdio.h>               // for stderr
-#include <stdexcept>             // for runtime_error, out_of_range
+#include <cassert>               // for assert
+#include <cstdio>                // for stderr
+#include <set>                   // for set
+#include <stdexcept>             // for logic_error, out_of_range, runtime_e...
 #include <utility>               // for pair, move
-#include <set>
 
 #include "genpass/Password.hpp"  // for Password, PasswordV2
 #include "genpass/detail/fmt_nlohmann.hpp"

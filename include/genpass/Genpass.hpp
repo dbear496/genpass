@@ -25,10 +25,9 @@
 #include <nlohmann/json_fwd.hpp>                // for json
 #include <cstddef>                              // for size_t
 #include <functional>                           // for function
-#include <map>                                  // for operator==
+#include <map>                                  // for map, operator==
 #include <memory>                               // for unique_ptr
 #include <string>                               // for string, basic_string
-#include <unordered_map>                        // for unordered_map
 
 #include "genpass/Password.hpp"                 // for Password
 #include "genpass/detail/IndirectIterator.hpp"  // for IndirectIterator

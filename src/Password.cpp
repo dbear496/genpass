@@ -25,14 +25,13 @@
 #include <openssl/evp.h>                 // for EVP_EncodeBlock, EVP_MAC_CTX...
 #include <openssl/types.h>               // for EVP_MAC, EVP_MAC_CTX
 #include <cstring>                       // for memcpy
-#include <map>                           // for operator==
+#include <functional>                    // for function
 #include <stdexcept>                     // for runtime_error, invalid_argument
-#include <functional>
 
-#include "genpass/Seed.hpp"                      // for Seed
-#include "genpass/detail/ossl_ptr.hpp"             // for ossl_unique_ptr
-#include "genpass/detail/serialize.hpp"            // for serialize
-#include "genpass/Genpass.hpp"
+#include "genpass/Genpass.hpp"           // for Genpass
+#include "genpass/Seed.hpp"              // for Seed
+#include "genpass/detail/ossl_ptr.hpp"   // for ossl_unique_ptr
+#include "genpass/detail/serialize.hpp"  // for serialize
 
 namespace genpass {
 

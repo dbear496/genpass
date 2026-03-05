@@ -24,8 +24,8 @@
 #include <nlohmann/json_fwd.hpp>  // for json
 #include <cstddef>                // for size_t
 #include <cstdint>                // for int32_t
-#include <string>                 // for string, basic_string
 #include <set>                    // for set
+#include <string>                 // for string, basic_string
 
 #include "genpass/Seed.hpp"               // for Seed
 
