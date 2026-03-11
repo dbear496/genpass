@@ -48,6 +48,11 @@ public:
     const std::string& password
   );
 
+  void toEncryptedFile(
+    const std::filesystem::path& file,
+    const std::string& password
+  );
+
 private:
 
   const EVP_SKEY_ptr key;
