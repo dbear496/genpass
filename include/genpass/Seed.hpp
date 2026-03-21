@@ -43,15 +43,17 @@ public:
 
   EVP_SKEY *getKey() const { return key.get(); }
 
+  void toEncryptedFile(
+    const std::filesystem::path& file,
+    const std::string& password
+  );
+
   static Seed fromEncryptedFile(
     const std::filesystem::path& file,
     const std::string& password
   );
 
-  void toEncryptedFile(
-    const std::filesystem::path& file,
-    const std::string& password
-  );
+  static Seed fromPassword(const std::string& password);
 
 private:
 

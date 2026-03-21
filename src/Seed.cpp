@@ -36,12 +36,18 @@
 
 namespace genpass {
 
-static const unsigned char saltMagic[] = "Salted__";
-static const char kdfName[] = "PBKDF2";
-static const std::size_t saltLen = PKCS5_SALT_LEN;
-static const unsigned int kdfIterations = 1 << 13;
-static const char cipherName[] = "AES-256-ECB";
 static const std::size_t seedLen = 256 / 8;
+
+static const unsigned char enc_saltMagic[8] = {'S','a','l','t','e','d','_','_'};
+static const char enc_kdfName[] = "PBKDF2";
+static const std::size_t enc_saltLen = PKCS5_SALT_LEN;
+static const unsigned int enc_kdfIter = 1 << 16;
+static const char enc_cipherName[] = "AES-256-ECB";
+
+static const char gen_kdfName[] = "PBKDF2";
+static const unsigned char gen_kdfSalt[] =
+  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const unsigned int gen_kdfIter = 1 << 24;
 
 static inline ossl_unique_ptr<EVP_CIPHER_CTX>
 initFileEncryptionCipher(bool encrypt, const std::string& password,
@@ -49,7 +55,7 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
 ) {
   // fetch KDF
   ossl_unique_ptr<EVP_KDF> kdfAlg(
-    EVP_KDF_fetch(NULL, kdfName, NULL),
+    EVP_KDF_fetch(NULL, enc_kdfName, NULL),
     &EVP_KDF_free);
   if(!kdfAlg) throw std::runtime_error("failed to fetch PBKDF2 algorithm");
 
@@ -60,7 +66,7 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
 
   // fetch cipher
   ossl_unique_ptr<EVP_CIPHER> cipherAlg(
-    EVP_CIPHER_fetch(NULL, cipherName, NULL),
+    EVP_CIPHER_fetch(NULL, enc_cipherName, NULL),
     &EVP_CIPHER_free);
   if(!cipherAlg) throw std::runtime_error("failed to fetch cipher algorithm");
 
@@ -73,11 +79,11 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
   // derive key
   OSSL_PARAM kdfParams[] = {
     {OSSL_KDF_PARAM_PASSWORD, OSSL_PARAM_OCTET_STRING,
-      const_cast<std::string&>(password).data(), password.length(), 0},
+      const_cast<char *>(password.data()), password.length(), 0},
     {OSSL_KDF_PARAM_SALT, OSSL_PARAM_OCTET_STRING,
       const_cast<unsigned char *>(salt), saltLen, 0},
     {OSSL_KDF_PARAM_ITER, OSSL_PARAM_UNSIGNED_INTEGER,
-      &const_cast<unsigned int&>(kdfIterations), sizeof(kdfIterations), 0},
+      &const_cast<unsigned int&>(enc_kdfIter), sizeof(enc_kdfIter), 0},
     {NULL, 0, NULL, 0, 0}
   };
   unsigned char ivkey[ivLen + keyLen];
@@ -105,9 +111,14 @@ Seed::toEncryptedFile(
   const std::filesystem::path& file,
   const std::string& password
 ) {
+  /*
+  equivalent openssl command:
+  $ openssl enc -AES-256-ECB -e -pbkdf2 -iter 65536 -pass pass:<password>
+  */
+
   // generate a random salt
-  unsigned char salt[saltLen];
-  if(RAND_bytes(salt, saltLen) <= 0) throw std::runtime_error(
+  unsigned char salt[enc_saltLen];
+  if(RAND_bytes(salt, enc_saltLen) <= 0) throw std::runtime_error(
     "failed to generate random salt");
 
   // get the raw key bytes
@@ -121,7 +132,7 @@ Seed::toEncryptedFile(
 
   // create the cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx =
-    initFileEncryptionCipher(true, password, salt, saltLen);
+    initFileEncryptionCipher(true, password, salt, enc_saltLen);
 
   // encrypt the seed
   unsigned char seedEnc[seedLen + 16]; // with padding
@@ -137,8 +148,8 @@ Seed::toEncryptedFile(
   std::basic_ofstream<unsigned char> out(file,
     std::ios::out | std::ios::binary | std::ios::trunc);
   out.exceptions(std::ios::badbit | std::ios::failbit);
-  out.write(saltMagic, sizeof(saltMagic));
-  out.write(salt, saltLen);
+  out.write(enc_saltMagic, sizeof(enc_saltMagic));
+  out.write(salt, enc_saltLen);
   out.write(seedEnc, seedLen + 16);
 }
 
@@ -147,24 +158,29 @@ Seed::fromEncryptedFile(
   const std::filesystem::path& file,
   const std::string& password
 ) {
+  /*
+  equivalent openssl command:
+  $ openssl enc -AES-256-ECB -d -pbkdf2 -iter 65536 -pass pass:<password>
+  */
+
   // setup input stream
   std::basic_ifstream<unsigned char> in(file);
   in.exceptions(std::ios::badbit | std::ios::failbit);
 
   { // read and verify magic number
-    unsigned char magicBuf[sizeof(saltMagic) - 1];
+    unsigned char magicBuf[sizeof(enc_saltMagic)];
     in.read(magicBuf, sizeof(magicBuf));
-    if(std::memcmp(magicBuf, saltMagic, sizeof(magicBuf)))
+    if(std::memcmp(magicBuf, enc_saltMagic, sizeof(magicBuf)))
       throw std::runtime_error("bad magic number");
   }
 
   // read salt
-  unsigned char salt[saltLen];
-  in.read(salt, saltLen);
+  unsigned char salt[enc_saltLen];
+  in.read(salt, enc_saltLen);
 
   // create cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx =
-    initFileEncryptionCipher(false, password, salt, saltLen);
+    initFileEncryptionCipher(false, password, salt, enc_saltLen);
 
   // read encrypted seed
   unsigned char seedRaw[seedLen + 16]; // with padding
@@ -179,6 +195,48 @@ Seed::fromEncryptedFile(
     throw std::runtime_error(
       "failed to finalize decryption. (Make sure the password is correct!)");
   assert(tmp == 0);
+
+  ossl_unique_ptr<EVP_SKEY> seedKey(
+    EVP_SKEY_import_raw_key(NULL, NULL, seedRaw, seedLen, NULL),
+    &EVP_SKEY_free
+  );
+  if(!seedKey) throw std::runtime_error("failed to create SKEY");
+
+  return Seed(std::move(seedKey));
+}
+
+Seed
+Seed::fromPassword(const std::string& password) {
+  /*
+  equivalent openssl command:
+  $ openssl kdf -keylen 32 -kdfopt hexsalt:0000000000000000 \
+    -kdfopt iter:16777216 -kdfopt pass:<password> -binary PBKDF2
+  */
+
+  // fetch KDF
+  ossl_unique_ptr<EVP_KDF> kdfAlg(
+    EVP_KDF_fetch(NULL, gen_kdfName, NULL),
+    &EVP_KDF_free);
+  if(!kdfAlg) throw std::runtime_error("failed to fetch PBKDF2 algorithm");
+
+  // create KDF
+  ossl_unique_ptr<EVP_KDF_CTX> kdf(EVP_KDF_CTX_new(kdfAlg.get()),
+    &EVP_KDF_CTX_free);
+  if(!kdf) throw std::runtime_error("failed to create PBKDF2 context");
+
+  // derive key
+  OSSL_PARAM kdfParams[] = {
+    {OSSL_KDF_PARAM_PASSWORD, OSSL_PARAM_OCTET_STRING,
+      const_cast<char *>(password.data()), password.length(), 0},
+    {OSSL_KDF_PARAM_SALT, OSSL_PARAM_OCTET_STRING,
+      const_cast<unsigned char *>(gen_kdfSalt), sizeof(gen_kdfSalt), 0},
+    {OSSL_KDF_PARAM_ITER, OSSL_PARAM_UNSIGNED_INTEGER,
+      const_cast<unsigned int *>(&gen_kdfIter), sizeof(gen_kdfIter), 0},
+    {NULL, 0, NULL, 0, 0}
+  };
+  unsigned char seedRaw[seedLen];
+  if(!EVP_KDF_derive(kdf.get(), seedRaw, seedLen, kdfParams))
+    throw std::runtime_error("failed to derive seed");
 
   ossl_unique_ptr<EVP_SKEY> seedKey(
     EVP_SKEY_import_raw_key(NULL, NULL, seedRaw, seedLen, NULL),
