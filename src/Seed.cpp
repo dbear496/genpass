@@ -44,6 +44,7 @@ static const unsigned int enc_kdfIter = 1 << 16;
 static const char enc_cipherName[] = "AES-256-ECB";
 
 static const char gen_kdfName[] = "PBKDF2";
+static const char gen_kdfDigest[] = "SHA256";
 static const unsigned char gen_kdfSalt[] =
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const unsigned int gen_kdfIter = 1 << 24;
@@ -193,7 +194,7 @@ Seed
 Seed::fromPassword(const std::string& password) {
   /*
   equivalent openssl command:
-  $ openssl kdf -keylen 32 -kdfopt hexsalt:0000000000000000 \
+  $ openssl kdf -keylen 32 -digest SHA256 -kdfopt hexsalt:0000000000000000 \
     -kdfopt iter:16777216 -kdfopt pass:<password> -binary PBKDF2
   */
 
@@ -214,6 +215,8 @@ Seed::fromPassword(const std::string& password) {
       const_cast<char *>(password.data()), password.length(), 0},
     {OSSL_KDF_PARAM_SALT, OSSL_PARAM_OCTET_STRING,
       const_cast<unsigned char *>(gen_kdfSalt), sizeof(gen_kdfSalt), 0},
+    {OSSL_KDF_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING,
+      const_cast<char *>(gen_kdfDigest), sizeof(gen_kdfDigest)-1, 0},
     {OSSL_KDF_PARAM_ITER, OSSL_PARAM_UNSIGNED_INTEGER,
       const_cast<unsigned int *>(&gen_kdfIter), sizeof(gen_kdfIter), 0},
     {NULL, 0, NULL, 0, 0}
