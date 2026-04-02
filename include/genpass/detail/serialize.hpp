@@ -18,8 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ------------------------------------------------------------------------ */
 
-#ifndef __GENPASS_UTIL_SERIALIZE_HPP__
-#define __GENPASS_UTIL_SERIALIZE_HPP__
+#ifndef __GENPASS_DETAIL_SERIALIZE_HPP__
+#define __GENPASS_DETAIL_SERIALIZE_HPP__
 
 #ifndef __GENPASS_PRIVATE__
 // IWYU pragma: private
@@ -50,4 +50,4 @@ std::size_t deserialize(T& dst, const unsigned char *src) {
 
 }
 
-#endif // __GENPASS_UTIL_SERIALIZE_HPP__
+#endif // __GENPASS_DETAIL_SERIALIZE_HPP__

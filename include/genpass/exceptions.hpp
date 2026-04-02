@@ -21,7 +21,22 @@
 #ifndef __GENPASS_EXCEPTIONS_HPP__
 #define __GENPASS_EXCEPTIONS_HPP__
 
+#include <exception>
+#include <stdexcept>
+#include <string>
+
 namespace genpass {
+
+class ossl_error : public std::exception {
+public:
+  ossl_error() noexcept;
+  virtual ~ossl_error() noexcept { }
+
+  const char *what() const noexcept override { return whatStr.c_str(); }
+
+private:
+  std::string whatStr;
+};
 
 class WrongKeyException : public std::runtime_error {
 public:

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------ *\
- * include/genpass/detail/ossl_ptr.hpp
+ * src/exceptions.cpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
@@ -18,21 +18,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ------------------------------------------------------------------------ */
 
+#include "genpass/exceptions.hpp"
 
-#ifndef __GENPASS_DETAIL_OSSL_PTR_HPP__
-#define __GENPASS_DETAIL_OSSL_PTR_HPP__
-
-#ifndef __GENPASS_PRIVATE__
-// IWYU pragma: private
-#endif
-
-#include <memory>
+#include <fmt/format.h>
+#include <openssl/err.h>
 
 namespace genpass {
 
-template<typename OSSL_TYPE>
-using ossl_unique_ptr = std::unique_ptr<OSSL_TYPE, void (*)(OSSL_TYPE *)>;
-
+ossl_error::ossl_error() noexcept : std::exception() {
+  unsigned long code;
+  const char *library;
+  const char *func;
+  const char *reason;
+  const char *file;
+  int line;
+  int flags;
+  const char *data;
+  code = ERR_peek_last_error_all(&file, &line, &func, &data, &flags);
+  library = ERR_lib_error_string(code);
+  reason = ERR_reason_error_string(code);
+  whatStr = fmt::format("error:{:d}:{:s}:{:s}:{:s}:{:s}:{:d}:{:x}:{:s}",
+    code, library, func, reason, file, line, flags, data
+  );
 }
 
-#endif // __GENPASS_DETAIL_OSSL_PTR_HPP__
+}

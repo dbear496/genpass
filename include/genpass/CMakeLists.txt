@@ -21,6 +21,7 @@
 
 target_sources(genpass
   PUBLIC FILE_SET HEADERS FILES
+  exceptions.hpp
   Genpass.hpp
   Password.hpp
   Seed.hpp

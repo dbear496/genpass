@@ -21,8 +21,9 @@
 #ifndef __GENPASS_SEED_HPP__
 #define __GENPASS_SEED_HPP__
 
+#include <cstddef>     // for size_t
 #include <filesystem>  // for path
-#include <memory>      // for unique_ptr
+#include <memory>      // for unique_ptr, make_unique
 #include <string>      // for string
 #include <utility>     // for move
 

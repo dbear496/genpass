@@ -18,8 +18,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ------------------------------------------------------------------------ */
 
-#ifndef __GENPASS_UTIL_INDIRECTITERATOR_HPP__
-#define __GENPASS_UTIL_INDIRECTITERATOR_HPP__
+#ifndef __GENPASS_DETAIL_INDIRECTITERATOR_HPP__
+#define __GENPASS_DETAIL_INDIRECTITERATOR_HPP__
+
+#ifndef __GENPASS_PRIVATE__
+// IWYU pragma: private
+#endif
 
 #include <cstddef>
 
@@ -50,4 +54,4 @@ private:
 
 } // namespace genpass::detail
 
-#endif // __GENPASS_UTIL_INDIRECTITERATOR_HPP__
+#endif // __GENPASS_DETAIL_INDIRECTITERATOR_HPP__

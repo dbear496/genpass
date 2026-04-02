@@ -22,18 +22,19 @@
 
 #include <nlohmann/detail/json_ref.hpp>  // for json_ref
 #include <nlohmann/json.hpp>             // for basic_json
+#include <openssl/core.h>                // for OSSL_PARAM_UTF8_STRING, ossl...
+#include <openssl/core_names.h>          // for OSSL_MAC_PARAM_DIGEST
 #include <openssl/evp.h>                 // for EVP_EncodeBlock, EVP_MAC_CTX...
-#include <openssl/types.h>               // for EVP_MAC, EVP_MAC_CTX
+#include <openssl/types.h>               // for EVP_MAC, EVP_MAC_CTX, OSSL_P...
 #include <cstring>                       // for memcpy
 #include <functional>                    // for function
 #include <stdexcept>                     // for runtime_error, invalid_argument
-#include <openssl/core_names.h>
-#include <openssl/err.h>
 
 #include "genpass/Genpass.hpp"           // for Genpass
 #include "genpass/Seed.hpp"              // for Seed
 #include "genpass/detail/ossl_ptr.hpp"   // for ossl_unique_ptr
 #include "genpass/detail/serialize.hpp"  // for serialize
+#include "genpass/exceptions.hpp"
 
 namespace genpass {
 
@@ -112,8 +113,7 @@ PasswordV2::generate(const Seed& seed) const {
 
   ossl_unique_ptr<EVP_MAC_CTX> mac(EVP_MAC_CTX_new(macAlg.get()),
     &EVP_MAC_CTX_free);
-  if(!mac)
-    throw std::runtime_error("failed to create MAC context");
+  if(!mac) throw ossl_error();
 
   OSSL_PARAM macParams[] = {
     {OSSL_MAC_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING,
@@ -121,19 +121,16 @@ PasswordV2::generate(const Seed& seed) const {
     {NULL, 0, NULL, 0, 0}
   };
   if(!EVP_MAC_init(mac.get(), seed.getData(), Seed::SIZE, macParams))
-    throw std::runtime_error("failure in MAC initialization");
+    throw ossl_error();
 
-  if(!EVP_MAC_update(mac.get(), genData, genDataSize))
-    throw std::runtime_error("failure in MAC update");
+  if(!EVP_MAC_update(mac.get(), genData, genDataSize)) throw ossl_error();
 
   std::size_t macSize = EVP_MAC_CTX_get_mac_size(mac.get());
-  if(!macSize)
-    throw std::runtime_error("failed to query MAC size");
+  if(!macSize) throw ossl_error();
 
   unsigned char macOut[macSize];
   std::size_t macOutLen;
-  if(!EVP_MAC_final(mac.get(), macOut, &macOutLen, macSize))
-    throw std::runtime_error("failed to finalize MAC");
+  if(!EVP_MAC_final(mac.get(), macOut, &macOutLen, macSize)) throw ossl_error();
 
   unsigned char encoded[(macOutLen + 2) / 3 * 4 + 1];
   EVP_EncodeBlock(encoded, macOut, macOutLen);

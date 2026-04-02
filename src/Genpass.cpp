@@ -167,7 +167,7 @@ Genpass::deserialize<nlohmann::json>(nlohmann::json&& in) {
     auto algorithmLookup = algorithms.find(algName);
     if(algorithmLookup == algorithms.end()) {
       unknownAlg = true;
-      fmt::println(stderr, "error: unknown algorithm for %s: %s",
+      fmt::println(stderr, "error: unknown algorithm for {:s}: {:s}",
         pwJson.at("id"), algName);
       continue;
     }

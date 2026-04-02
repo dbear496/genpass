@@ -20,20 +20,19 @@
 
 #include "genpass/Seed.hpp"
 
-#include <openssl/core.h>        // for OSSL_PARAM_OCTET_STRING, OSSL_PARAM_...
-#include <openssl/core_names.h>  // for OSSL_KDF_PARAM_ITER, OSSL_KDF_PARAM_...
-#include <openssl/evp.h>         // for EVP_CIPHER_CTX_new, EVP_CIPHER_CTX_s...
-#include <openssl/kdf.h>         // for EVP_KDF_CTX_new, EVP_KDF_derive, EVP...
-#include <openssl/rand.h>
-#include <openssl/types.h>       // for EVP_CIPHER, EVP_CIPHER_CTX, EVP_KDF
-#include <cassert>               // for assert
-#include <cstring>               // for NULL, memcmp, size_t
-#include <fstream>               // for basic_ifstream, basic_istream::read
-#include <stdexcept>             // for runtime_error
-#include <fmt/format.h>
+#include <openssl/core.h>               // for OSSL_PARAM_OCTET_STRING, OSSL...
+#include <openssl/core_names.h>         // for OSSL_KDF_PARAM_ITER, OSSL_KDF...
+#include <openssl/evp.h>                // for EVP_CIPHER_CTX_free, EVP_CIPH...
+#include <openssl/kdf.h>                // for EVP_KDF_CTX_free, EVP_KDF_CTX...
+#include <openssl/rand.h>               // for RAND_bytes
+#include <openssl/types.h>              // for EVP_CIPHER_CTX, EVP_KDF, EVP_...
+#include <cassert>                      // for assert
+#include <cstring>                      // for memcmp
+#include <fstream>                      // for basic_ifstream, basic_ofstream
+#include <stdexcept>                    // for runtime_error
 
-#include "genpass/detail/ossl_ptr.hpp"     // for ossl_unique_ptr
-#include "genpass/exceptions.hpp"
+#include "genpass/detail/ossl_ptr.hpp"  // for ossl_unique_ptr
+#include "genpass/exceptions.hpp"       // for WrongKeyException
 
 namespace genpass {
 
@@ -57,24 +56,24 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
   ossl_unique_ptr<EVP_KDF> kdfAlg(
     EVP_KDF_fetch(NULL, enc_kdfName, NULL),
     &EVP_KDF_free);
-  if(!kdfAlg) throw std::runtime_error("failed to fetch PBKDF2 algorithm");
+  if(!kdfAlg) throw ossl_error();
 
   // create KDF
   ossl_unique_ptr<EVP_KDF_CTX> kdf(EVP_KDF_CTX_new(kdfAlg.get()),
     &EVP_KDF_CTX_free);
-  if(!kdf) throw std::runtime_error("failed to create PBKDF2 context");
+  if(!kdf) throw ossl_error();
 
   // fetch cipher
   ossl_unique_ptr<EVP_CIPHER> cipherAlg(
     EVP_CIPHER_fetch(NULL, enc_cipherName, NULL),
     &EVP_CIPHER_free);
-  if(!cipherAlg) throw std::runtime_error("failed to fetch cipher algorithm");
+  if(!cipherAlg) throw ossl_error();
 
   // query cipher parameters
   const int ivLen = EVP_CIPHER_get_iv_length(cipherAlg.get());
   const int keyLen = EVP_CIPHER_get_key_length(cipherAlg.get());
   assert(EVP_CIPHER_get_block_size(cipherAlg.get()) == 16);
-  if(ivLen < 0) throw std::runtime_error("failed to get IV length");
+  if(ivLen < 0) throw ossl_error();
 
   // derive key
   OSSL_PARAM kdfParams[] = {
@@ -90,12 +89,12 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
   };
   unsigned char ivkey[ivLen + keyLen];
   if(!EVP_KDF_derive(kdf.get(), ivkey, ivLen + keyLen, kdfParams))
-    throw std::runtime_error("failed to derive cipher key");
+    throw ossl_error();
 
   // create cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx(EVP_CIPHER_CTX_new(),
     &EVP_CIPHER_CTX_free);
-  if(!cipherCtx) throw std::runtime_error("failed to create cipher context");
+  if(!cipherCtx) throw ossl_error();
 
   // use a block of all padding to verify that the password is correct
   EVP_CIPHER_CTX_set_padding(cipherCtx.get(), 1);
@@ -103,7 +102,7 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
   // initialize cipher
   if(!EVP_CipherInit_ex2(cipherCtx.get(), cipherAlg.get(), ivkey + ivLen,
       ivkey, +encrypt, NULL)
-  ) throw std::runtime_error("failed to initialize cipher context");
+  ) throw ossl_error();
 
   return cipherCtx;
 }
@@ -120,8 +119,7 @@ Seed::toEncryptedFile(
 
   // generate a random salt
   unsigned char salt[enc_saltLen];
-  if(RAND_bytes(salt, enc_saltLen) <= 0) throw std::runtime_error(
-    "failed to generate random salt");
+  if(RAND_bytes(salt, enc_saltLen) <= 0) throw ossl_error();
 
   // create the cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx =
@@ -131,10 +129,9 @@ Seed::toEncryptedFile(
   unsigned char seedEnc[Seed::SIZE + 16]; // with padding
   int outl;
   if(!EVP_EncryptUpdate(cipherCtx.get(), seedEnc, &outl, getData(), Seed::SIZE))
-    throw std::runtime_error("failure during seed encryption");
+    throw ossl_error();
   assert(outl == Seed::SIZE);
-  if(!EVP_EncryptFinal(cipherCtx.get(), seedEnc, &outl))
-    throw std::runtime_error("failed to finalize encryption");
+  if(!EVP_EncryptFinal(cipherCtx.get(), seedEnc, &outl)) throw ossl_error();
   assert(outl == 16);
 
   // write everything to the file
@@ -183,7 +180,7 @@ Seed::fromEncryptedFile(
   auto data = Seed::allocData();
   int len;
   if(!EVP_DecryptUpdate(cipherCtx.get(), data.get(), &len, raw, Seed::SIZE+16))
-    throw std::runtime_error("failure during seed decryption");
+    throw ossl_error();
   assert(len == Seed::SIZE);
   if(!EVP_DecryptFinal(cipherCtx.get(), NULL, &len))
     throw WrongKeyException();
@@ -204,12 +201,12 @@ Seed::fromPassword(const std::string& password) {
   ossl_unique_ptr<EVP_KDF> kdfAlg(
     EVP_KDF_fetch(NULL, gen_kdfName, NULL),
     &EVP_KDF_free);
-  if(!kdfAlg) throw std::runtime_error("failed to fetch PBKDF2 algorithm");
+  if(!kdfAlg) throw ossl_error();
 
   // create KDF
   ossl_unique_ptr<EVP_KDF_CTX> kdf(EVP_KDF_CTX_new(kdfAlg.get()),
     &EVP_KDF_CTX_free);
-  if(!kdf) throw std::runtime_error("failed to create PBKDF2 context");
+  if(!kdf) throw ossl_error();
 
   // derive key
   OSSL_PARAM kdfParams[] = {
@@ -223,7 +220,7 @@ Seed::fromPassword(const std::string& password) {
   };
   auto data = Seed::allocData();
   if(!EVP_KDF_derive(kdf.get(), data.get(), Seed::SIZE, kdfParams))
-    throw std::runtime_error("failed to derive seed");
+    throw ossl_error();
 
   return Seed(std::move(data));
 }

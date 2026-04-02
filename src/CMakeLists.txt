@@ -20,6 +20,7 @@
 
 target_sources(genpass
   PRIVATE
+  exceptions.cpp
   Genpass.cpp
   Password.cpp
   Seed.cpp

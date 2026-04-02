@@ -18,8 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ------------------------------------------------------------------------ */
 
-#ifndef __GENPASS_UTIL_FMT_NLOHMANN_HPP__
-#define __GENPASS_UTIL_FMT_NLOHMANN_HPP__
+#ifndef __GENPASS_DETAIL_FMT_NLOHMANN_HPP__
+#define __GENPASS_DETAIL_FMT_NLOHMANN_HPP__
 
 #ifndef __GENPASS_PRIVATE__
 // IWYU pragma: private
@@ -31,4 +31,4 @@
 
 template <> struct fmt::formatter<nlohmann::json> : ostream_formatter {};
 
-#endif // __GENPASS_UTIL_FMT_NLOHMANN_HPP__
+#endif // __GENPASS_DETAIL_FMT_NLOHMANN_HPP__
