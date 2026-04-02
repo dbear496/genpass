@@ -2,7 +2,7 @@
  * include/genpass/Seed.hpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2025      David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,22 +26,17 @@
 #include <string>      // for string
 #include <utility>     // for move
 
-class evp_skey_st;
-
-using EVP_SKEY = evp_skey_st;
-
 namespace genpass {
 
 class Seed {
-  using EVP_SKEY_ptr = std::unique_ptr<EVP_SKEY, void (*)(EVP_SKEY *)>;
-
 public:
-  Seed(EVP_SKEY_ptr&& key)
-    : key(std::move(key))
-  { }
+
+  static const std::size_t SIZE = 32;
+
+  Seed(std::unique_ptr<const unsigned char[]>&& data) : data(std::move(data)) { }
   ~Seed() { }
 
-  EVP_SKEY *getKey() const { return key.get(); }
+  const unsigned char *getData() const { return data.get(); }
 
   void toEncryptedFile(
     const std::filesystem::path& file,
@@ -57,7 +52,11 @@ public:
 
 private:
 
-  const EVP_SKEY_ptr key;
+  std::unique_ptr<const unsigned char[]> data;
+
+  static std::unique_ptr<unsigned char[]> allocData() {
+    return std::make_unique<unsigned char[]>(Seed::SIZE);
+  }
 };
 
 } // namespace genpass

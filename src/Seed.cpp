@@ -33,13 +33,13 @@
 #include <fmt/format.h>
 
 #include "genpass/detail/ossl_ptr.hpp"     // for ossl_unique_ptr
+#include "genpass/exceptions.hpp"
 
 namespace genpass {
 
-static const std::size_t seedLen = 256 / 8;
-
 static const unsigned char enc_saltMagic[8] = {'S','a','l','t','e','d','_','_'};
 static const char enc_kdfName[] = "PBKDF2";
+static const char enc_kdfDigest[] = "SHA256";
 static const std::size_t enc_saltLen = PKCS5_SALT_LEN;
 static const unsigned int enc_kdfIter = 1 << 16;
 static const char enc_cipherName[] = "AES-256-ECB";
@@ -82,6 +82,8 @@ initFileEncryptionCipher(bool encrypt, const std::string& password,
       const_cast<char *>(password.data()), password.length(), 0},
     {OSSL_KDF_PARAM_SALT, OSSL_PARAM_OCTET_STRING,
       const_cast<unsigned char *>(salt), saltLen, 0},
+    {OSSL_KDF_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING,
+      const_cast<char *>(enc_kdfDigest), sizeof(enc_kdfDigest)-1, 0},
     {OSSL_KDF_PARAM_ITER, OSSL_PARAM_UNSIGNED_INTEGER,
       &const_cast<unsigned int&>(enc_kdfIter), sizeof(enc_kdfIter), 0},
     {NULL, 0, NULL, 0, 0}
@@ -121,36 +123,27 @@ Seed::toEncryptedFile(
   if(RAND_bytes(salt, enc_saltLen) <= 0) throw std::runtime_error(
     "failed to generate random salt");
 
-  // get the raw key bytes
-  const unsigned char *seedRaw;
-  std::size_t seedLenTmp;
-  if(!EVP_SKEY_get0_raw_key(key.get(), &seedRaw, &seedLenTmp))
-    throw std::runtime_error("failed to export raw seed");
-  if(seedLenTmp != seedLen)
-    throw std::runtime_error(fmt::format(
-      "unexpected seed length {}, expected {}", seedLenTmp, seedLen));
-
   // create the cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx =
     initFileEncryptionCipher(true, password, salt, enc_saltLen);
 
   // encrypt the seed
-  unsigned char seedEnc[seedLen + 16]; // with padding
+  unsigned char seedEnc[Seed::SIZE + 16]; // with padding
   int outl;
-  if(!EVP_EncryptUpdate(cipherCtx.get(), seedEnc, &outl, seedRaw, seedLen))
+  if(!EVP_EncryptUpdate(cipherCtx.get(), seedEnc, &outl, getData(), Seed::SIZE))
     throw std::runtime_error("failure during seed encryption");
-  assert(outl == seedLen);
+  assert(outl == Seed::SIZE);
   if(!EVP_EncryptFinal(cipherCtx.get(), seedEnc, &outl))
     throw std::runtime_error("failed to finalize encryption");
   assert(outl == 16);
 
   // write everything to the file
-  std::basic_ofstream<unsigned char> out(file,
+  std::ofstream out(file,
     std::ios::out | std::ios::binary | std::ios::trunc);
   out.exceptions(std::ios::badbit | std::ios::failbit);
-  out.write(enc_saltMagic, sizeof(enc_saltMagic));
-  out.write(salt, enc_saltLen);
-  out.write(seedEnc, seedLen + 16);
+  out.write((char *)enc_saltMagic, sizeof(enc_saltMagic));
+  out.write((char *)salt, enc_saltLen);
+  out.write((char *)seedEnc, Seed::SIZE + 16);
 }
 
 Seed
@@ -164,45 +157,39 @@ Seed::fromEncryptedFile(
   */
 
   // setup input stream
-  std::basic_ifstream<unsigned char> in(file);
+  std::ifstream in(file);
   in.exceptions(std::ios::badbit | std::ios::failbit);
 
   { // read and verify magic number
     unsigned char magicBuf[sizeof(enc_saltMagic)];
-    in.read(magicBuf, sizeof(magicBuf));
+    in.read((char *)magicBuf, sizeof(magicBuf));
     if(std::memcmp(magicBuf, enc_saltMagic, sizeof(magicBuf)))
       throw std::runtime_error("bad magic number");
   }
 
   // read salt
   unsigned char salt[enc_saltLen];
-  in.read(salt, enc_saltLen);
+  in.read((char *)salt, enc_saltLen);
 
   // create cipher
   ossl_unique_ptr<EVP_CIPHER_CTX> cipherCtx =
     initFileEncryptionCipher(false, password, salt, enc_saltLen);
 
   // read encrypted seed
-  unsigned char seedRaw[seedLen + 16]; // with padding
-  in.read(seedRaw, seedLen + 16);
+  unsigned char raw[Seed::SIZE + 16]; // with padding
+  in.read((char *)raw, Seed::SIZE + 16);
 
   // decrypt seed
-  int tmp;
-  if(!EVP_DecryptUpdate(cipherCtx.get(), seedRaw, &tmp, seedRaw, seedLen + 16))
+  auto data = Seed::allocData();
+  int len;
+  if(!EVP_DecryptUpdate(cipherCtx.get(), data.get(), &len, raw, Seed::SIZE+16))
     throw std::runtime_error("failure during seed decryption");
-  assert(tmp == seedLen);
-  if(!EVP_DecryptFinal(cipherCtx.get(), NULL, &tmp))
-    throw std::runtime_error(
-      "failed to finalize decryption. (Make sure the password is correct!)");
-  assert(tmp == 0);
+  assert(len == Seed::SIZE);
+  if(!EVP_DecryptFinal(cipherCtx.get(), NULL, &len))
+    throw WrongKeyException();
+  assert(len == 0);
 
-  ossl_unique_ptr<EVP_SKEY> seedKey(
-    EVP_SKEY_import_raw_key(NULL, NULL, seedRaw, seedLen, NULL),
-    &EVP_SKEY_free
-  );
-  if(!seedKey) throw std::runtime_error("failed to create SKEY");
-
-  return Seed(std::move(seedKey));
+  return Seed(std::move(data));
 }
 
 Seed
@@ -234,17 +221,11 @@ Seed::fromPassword(const std::string& password) {
       const_cast<unsigned int *>(&gen_kdfIter), sizeof(gen_kdfIter), 0},
     {NULL, 0, NULL, 0, 0}
   };
-  unsigned char seedRaw[seedLen];
-  if(!EVP_KDF_derive(kdf.get(), seedRaw, seedLen, kdfParams))
+  auto data = Seed::allocData();
+  if(!EVP_KDF_derive(kdf.get(), data.get(), Seed::SIZE, kdfParams))
     throw std::runtime_error("failed to derive seed");
 
-  ossl_unique_ptr<EVP_SKEY> seedKey(
-    EVP_SKEY_import_raw_key(NULL, NULL, seedRaw, seedLen, NULL),
-    &EVP_SKEY_free
-  );
-  if(!seedKey) throw std::runtime_error("failed to create SKEY");
-
-  return Seed(std::move(seedKey));
+  return Seed(std::move(data));
 }
 
 } // namespace genpass

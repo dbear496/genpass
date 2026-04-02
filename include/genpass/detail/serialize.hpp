@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------ *\
- * src/detail/serialize.hpp
+ * include/genpass/detail/serialize.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2025      David Bears <dbear4q@gmail.com>

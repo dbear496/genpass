@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------ *\
- * include/genpass/detail/ossl_ptr.hpp
+ * include/genpass/exceptions.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
@@ -18,21 +18,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \* ------------------------------------------------------------------------ */
 
-
-#ifndef __GENPASS_UTIL_OSSL_PTR_HPP__
-#define __GENPASS_UTIL_OSSL_PTR_HPP__
-
-#ifndef __GENPASS_PRIVATE__
-// IWYU pragma: private
-#endif
-
-#include <memory>
+#ifndef __GENPASS_EXCEPTIONS_HPP__
+#define __GENPASS_EXCEPTIONS_HPP__
 
 namespace genpass {
 
-template<typename OSSL_TYPE>
-using ossl_unique_ptr = std::unique_ptr<OSSL_TYPE, void (*)(OSSL_TYPE *)>;
+class WrongKeyException : public std::runtime_error {
+public:
+  WrongKeyException() : std::runtime_error("wrong key") { }
+};
 
 }
 
-#endif // __GENPASS_UTIL_OSSL_PTR_HPP__
+#endif // __GENPASS_EXCEPTIONS_HPP__

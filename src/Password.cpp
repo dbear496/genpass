@@ -2,7 +2,7 @@
  * src/Password.cpp
  * This file is part of GenPass.
  *
- * Copyright (C) 2025      David Bears <dbear4q@gmail.com>
+ * Copyright (C) 2025-2026 David Bears <dbear4q@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,8 @@
 #include <cstring>                       // for memcpy
 #include <functional>                    // for function
 #include <stdexcept>                     // for runtime_error, invalid_argument
+#include <openssl/core_names.h>
+#include <openssl/err.h>
 
 #include "genpass/Genpass.hpp"           // for Genpass
 #include "genpass/Seed.hpp"              // for Seed
@@ -91,6 +93,8 @@ PasswordV2::registerWith(Genpass& genpass) {
 std::string
 PasswordV2::generate(const Seed& seed) const {
 
+  static const char macDgst[] = "SHA256";
+
   const std::size_t genDataSize = sizeof(std::int32_t) + id.length();
   unsigned char genData[genDataSize];
   unsigned char *p = genData;
@@ -100,7 +104,7 @@ PasswordV2::generate(const Seed& seed) const {
   std::memcpy(p, id.data(), id.length());
 
   ossl_unique_ptr<EVP_MAC> macAlg(
-    EVP_MAC_fetch(NULL, "HMAC", "digest='SHA256'"),
+    EVP_MAC_fetch(NULL, "HMAC", NULL),
     &EVP_MAC_free
   );
   if(!macAlg)
@@ -111,7 +115,12 @@ PasswordV2::generate(const Seed& seed) const {
   if(!mac)
     throw std::runtime_error("failed to create MAC context");
 
-  if(!EVP_MAC_init_SKEY(mac.get(), seed.getKey(), NULL))
+  OSSL_PARAM macParams[] = {
+    {OSSL_MAC_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING,
+      const_cast<char *>(macDgst), sizeof(macDgst)-1, 0},
+    {NULL, 0, NULL, 0, 0}
+  };
+  if(!EVP_MAC_init(mac.get(), seed.getData(), Seed::SIZE, macParams))
     throw std::runtime_error("failure in MAC initialization");
 
   if(!EVP_MAC_update(mac.get(), genData, genDataSize))

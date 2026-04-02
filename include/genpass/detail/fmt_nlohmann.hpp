@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------ *\
- * src/detail/fmt_nlohmann.hpp
+ * include/genpass/detail/fmt_nlohmann.hpp
  * This file is part of GenPass.
  *
  * Copyright (C) 2026      David Bears <dbear4q@gmail.com>
